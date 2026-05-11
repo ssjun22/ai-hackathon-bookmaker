@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import type { Book } from "@/data/books";
 
 interface BookReaderModalProps {
@@ -47,13 +48,13 @@ export default function BookReaderModal({
     }
   }, [open]);
 
-  const backdropVariants = {
+  const backdropVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
     exit: { opacity: 0 },
   };
 
-  const modalVariants = reduceMotion
+  const modalVariants: Variants = reduceMotion
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1 },
@@ -101,10 +102,10 @@ export default function BookReaderModal({
           <motion.div
             key={`modal-${book.id}`}
             layoutId={reduceMotion ? undefined : `book-spine-${book.id}`}
-            variants={reduceMotion ? modalVariants : undefined}
-            initial={reduceMotion ? "hidden" : { opacity: 0, scale: 0.88, y: 24 }}
-            animate={reduceMotion ? "visible" : { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 340, damping: 28 } }}
-            exit={reduceMotion ? "exit" : { opacity: 0, scale: 0.92, y: 16, transition: { duration: 0.18 } }}
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             role="dialog"
             aria-modal="true"
             aria-label={`${book.title} 읽기`}
