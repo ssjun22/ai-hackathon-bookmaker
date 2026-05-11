@@ -29,6 +29,7 @@ export default function BookSpine({
       whileHover={reduceMotion ? undefined : { y: -8, transition: { duration: 0.2 } }}
       whileTap={reduceMotion ? undefined : { scale: 0.96 }}
       aria-label={`${title} 읽기`}
+      className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-amber-600"
       style={{
         position: "relative",
         display: "flex",
@@ -39,6 +40,7 @@ export default function BookSpine({
         padding: 0,
         cursor: "pointer",
         flexShrink: 0,
+        borderRadius: 6,
       }}
     >
       {/* 책갈피 리본 — 책 상단 위로 살짝 튀어나옴 */}

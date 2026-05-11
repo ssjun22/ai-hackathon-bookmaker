@@ -83,7 +83,7 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
           variants={reduceMotion ? undefined : containerVariants}
           initial={reduceMotion ? false : "hidden"}
           animate={reduceMotion ? undefined : "show"}
-          className="overflow-x-auto"
+          className="overflow-x-auto scrollbar-hide"
           style={{
             display: "flex",
             flexDirection: "row",
@@ -93,7 +93,6 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
             paddingRight: 24,
             paddingBottom: 0,
             scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
           }}
         >
           {booksWithContent.map((book) => (

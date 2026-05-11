@@ -125,6 +125,8 @@ export default function BookReaderModal({
                 "0 32px 64px rgba(60,40,20,0.30), 0 8px 24px rgba(60,40,20,0.18), inset 0 1px 0 rgba(255,255,255,0.85)",
               border: "1.5px solid rgba(120,90,50,0.12)",
               overflow: "hidden",
+              // 모바일: 화면 거의 풀 너비 + 하단 고정
+              // width는 min()으로 처리
             }}
           >
             {/* 모달 헤더 */}
@@ -197,11 +199,11 @@ export default function BookReaderModal({
 
             {/* 본문 스크롤 영역 */}
             <div
+              className="scrollbar-hide"
               style={{
                 overflowY: "auto",
                 flex: 1,
                 padding: "28px 32px 40px",
-                WebkitOverflowScrolling: "touch",
               }}
             >
               <p
