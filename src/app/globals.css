@@ -1,20 +1,32 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-beige: #f5e9d0;
+  /* 컬러 팔레트 (채도 보강) */
+  --color-beige: #F4E5C3;
   --color-beige-soft: #fbf3e0;
-  --color-green: #a8c97f;
-  --color-green-deep: #8db464;
-  --color-yellow: #f5c94b;
-  --color-brown: #3d2e1e;
-  --color-brown-soft: #6b533a;
-  --color-card: #fbf7f0;
+  --color-green: #95C566;
+  --color-green-deep: #76B048;
+  --color-yellow: #F0B829;
+  --color-brown: #3D2E1E;
+  --color-brown-soft: #6B533A;
+  --color-card: #FFFBF0;
 
-  --shadow-felt: 0 8px 20px rgba(120, 90, 50, 0.12);
-  --shadow-felt-soft: 0 4px 10px rgba(120, 90, 50, 0.08);
+  /* Claymorphism 토큰 */
+  --shadow-clay: 0 10px 20px rgba(120,90,50,0.18), 0 4px 8px rgba(120,90,50,0.12), inset 0 -3px 6px rgba(120,90,50,0.10), inset 0 3px 6px rgba(255,255,255,0.60);
+  --shadow-clay-sm: 0 6px 12px rgba(120,90,50,0.15), inset 0 -2px 4px rgba(120,90,50,0.08), inset 0 2px 4px rgba(255,255,255,0.50);
+  --border-clay: 3px solid rgba(120,90,50,0.10);
+  --radius-clay: 24px;
+  --radius-clay-sm: 18px;
 
-  --radius-felt: 20px;
-  --radius-felt-sm: 14px;
+  /* 폰트 변수 */
+  --font-display: var(--font-gowun), var(--font-pretendard), system-ui;
+  --font-body: var(--font-pretendard), -apple-system, sans-serif;
+
+  /* deprecated (claymorphism으로 교체됨) */
+  /* --shadow-felt: 0 8px 20px rgba(120, 90, 50, 0.12); */
+  /* --shadow-felt-soft: 0 4px 10px rgba(120, 90, 50, 0.08); */
+  /* --radius-felt: 20px; */
+  /* --radius-felt-sm: 14px; */
 }
 
 * {
@@ -32,7 +44,24 @@ body {
 body {
   background-color: var(--color-beige);
   color: var(--color-brown);
-  font-family: var(--font-pretendard, system-ui), -apple-system, sans-serif;
+  font-family: var(--font-body);
+}
+
+/* 펠트 노이즈 텍스처 overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.35  0 0 0 0 0.20  0 0 0 0.08 0'/></filter><rect width='40' height='40' filter='url(%23n)'/></svg>");
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  z-index: 1;
+}
+
+/* 디스플레이 폰트 */
+.font-display {
+  font-family: var(--font-display);
 }
 
 /* 스크롤바 숨기기 (Bookshelf 가로 스크롤용) */
