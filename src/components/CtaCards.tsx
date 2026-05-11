@@ -178,7 +178,7 @@ const cards: {
   desc: string;
 }[] = [
   {
-    href: "/read",
+    href: "/library",
     label: "책 읽기",
     icon: <BookIcon />,
     bg: "var(--color-green)",
