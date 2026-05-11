@@ -2,22 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
 
-const tabs = [
+type Tab = {
+  href: string;
+  label: string;
+  renderIcon: (active: boolean) => ReactNode;
+};
+
+const tabs: Tab[] = [
   {
     href: "/",
     label: "홈",
-    icon: (active: boolean) => (
+    renderIcon: (active) => (
       <svg
-        width="22"
-        height="22"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill={active ? "var(--color-green-deep)" : "none"}
         stroke={active ? "var(--color-green-deep)" : "var(--color-brown-soft)"}
-        strokeWidth="2"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" />
@@ -27,16 +35,17 @@ const tabs = [
   {
     href: "/library",
     label: "나의 서재",
-    icon: (active: boolean) => (
+    renderIcon: (active) => (
       <svg
-        width="22"
-        height="22"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
         stroke={active ? "var(--color-green-deep)" : "var(--color-brown-soft)"}
-        strokeWidth="2"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
@@ -46,16 +55,17 @@ const tabs = [
   {
     href: "/me",
     label: "내 정보",
-    icon: (active: boolean) => (
+    renderIcon: (active) => (
       <svg
-        width="22"
-        height="22"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
         stroke={active ? "var(--color-green-deep)" : "var(--color-brown-soft)"}
-        strokeWidth="2"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
@@ -71,32 +81,67 @@ function isActive(href: string, pathname: string): boolean {
 
 export default function TabBar() {
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
+      aria-label="주요 메뉴"
+      className="fixed bottom-0 left-0 right-0 flex justify-around items-center"
       style={{
+        zIndex: 50,
         backgroundColor: "var(--color-card)",
-        boxShadow: "0 -2px 10px rgba(120,90,50,0.08)",
+        boxShadow: "0 -8px 24px rgba(120,90,50,0.12), 0 -2px 4px rgba(120,90,50,0.08)",
         paddingTop: 10,
         paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
         maxWidth: 480,
-        margin: "0 auto",
+        marginLeft: "auto",
+        marginRight: "auto",
+        borderTopLeftRadius: "var(--radius-clay)",
+        borderTopRightRadius: "var(--radius-clay)",
       }}
     >
       {tabs.map((tab) => {
         const active = isActive(tab.href, pathname);
         return (
-          <motion.div key={tab.href} whileTap={{ scale: 0.9 }}>
-            <Link
-              href={tab.href}
-              className="flex flex-col items-center gap-1"
-              style={{ textDecoration: "none", minWidth: 60 }}
-            >
-              {tab.icon(active)}
-              <span
-                className="text-xs font-medium"
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-current={active ? "page" : undefined}
+            aria-label={tab.label}
+            className="relative flex flex-col items-center justify-center focus-visible:outline-none"
+            style={{
+              textDecoration: "none",
+              minWidth: 64,
+              minHeight: 48,
+              padding: "6px 14px",
+              borderRadius: 999,
+            }}
+          >
+            {/* 활성 pill */}
+            {active && (
+              <motion.div
+                layoutId="tab-pill"
+                className="absolute"
                 style={{
+                  inset: 0,
+                  borderRadius: 999,
+                  backgroundColor: "rgba(118,176,72,0.18)",
+                  border: "1.5px solid rgba(118,176,72,0.30)",
+                  zIndex: 0,
+                }}
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 380, damping: 30 }
+                }
+              />
+            )}
+            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              {tab.renderIcon(active)}
+              <span
+                className="text-xs"
+                style={{
+                  fontWeight: active ? 700 : 500,
                   color: active
                     ? "var(--color-green-deep)"
                     : "var(--color-brown-soft)",
@@ -104,8 +149,8 @@ export default function TabBar() {
               >
                 {tab.label}
               </span>
-            </Link>
-          </motion.div>
+            </div>
+          </Link>
         );
       })}
     </nav>
