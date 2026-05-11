@@ -15,12 +15,31 @@
 
   --radius-felt: 20px;
   --radius-felt-sm: 14px;
+}
 
-  --font-pretendard: var(--font-pretendard);
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
   background-color: var(--color-beige);
   color: var(--color-brown);
-  font-family: var(--font-pretendard), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-pretendard, system-ui), -apple-system, sans-serif;
+}
+
+/* 스크롤바 숨기기 (Bookshelf 가로 스크롤용) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
