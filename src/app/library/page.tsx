@@ -1,36 +1,27 @@
-export default function LibraryPage() {
+import fs from "node:fs/promises";
+import path from "node:path";
+import { books } from "@/data/books";
+import LibraryClient from "@/components/LibraryClient";
+
+export default async function LibraryPage() {
+  // 각 책의 본문을 서버에서 미리 읽어 클라이언트에 전달
+  const booksWithContent = await Promise.all(
+    books.map(async (book) => {
+      const filePath = path.join(process.cwd(), "public", "books", book.contentFile);
+      const content = await fs.readFile(filePath, "utf-8");
+      return { ...book, content };
+    })
+  );
+
   return (
     <main
       style={{
         minHeight: "100dvh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         backgroundColor: "var(--color-beige)",
+        paddingBottom: 100, // TabBar 높이 확보
       }}
     >
-      <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: 40 }}>📚</p>
-        <p
-          style={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: "var(--color-brown)",
-            marginTop: 12,
-          }}
-        >
-          나의 서재
-        </p>
-        <p
-          style={{
-            fontSize: 14,
-            color: "var(--color-brown-soft)",
-            marginTop: 6,
-          }}
-        >
-          준비 중이에요!
-        </p>
-      </div>
+      <LibraryClient booksWithContent={booksWithContent} />
     </main>
   );
 }
