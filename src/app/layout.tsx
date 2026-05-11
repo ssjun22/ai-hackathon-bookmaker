@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Gowun_Dodum } from "next/font/google";
 import "./globals.css";
+import TabBar from "@/components/TabBar";
 
 const pretendard = localFont({
   src: "../../public/fonts/PretendardVariable.woff2",
   variable: "--font-pretendard",
+  display: "swap",
+});
+
+const gowunDodum = Gowun_Dodum({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-gowun",
   display: "swap",
 });
 
@@ -19,14 +28,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={pretendard.variable}>
+    <html lang="ko" className={`${pretendard.variable} ${gowunDodum.variable}`}>
       <head>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <TabBar />
+      </body>
     </html>
   );
 }
