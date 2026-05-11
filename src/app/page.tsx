@@ -2,7 +2,6 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import CtaCards from "@/components/CtaCards";
 import Bookshelf from "@/components/Bookshelf";
-import TabBar from "@/components/TabBar";
 
 export default function Home() {
   return (
@@ -15,6 +14,7 @@ export default function Home() {
         position: "relative",
         display: "flex",
         flexDirection: "column",
+        zIndex: 2,
       }}
     >
       {/* 헤더 */}
@@ -25,7 +25,7 @@ export default function Home() {
         style={{
           flex: 1,
           overflowY: "auto",
-          paddingBottom: "calc(72px + env(safe-area-inset-bottom))",
+          paddingBottom: "calc(80px + env(safe-area-inset-bottom))",
         }}
       >
         {/* 히어로 */}
@@ -37,9 +37,6 @@ export default function Home() {
         {/* 내 서재 */}
         <Bookshelf />
       </div>
-
-      {/* 탭 바 */}
-      <TabBar />
     </div>
   );
 }
