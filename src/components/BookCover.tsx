@@ -1,4 +1,5 @@
 // 정적 서버 컴포넌트 — framer-motion 미사용
+import type { ReactElement } from "react";
 
 type Palette = {
   bg: string;
@@ -166,7 +167,7 @@ export default function BookCover({
   width = 110,
   height = 148,
 }: BookCoverProps) {
-  const motifComponents: Record<Motif, JSX.Element> = {
+  const motifComponents: Record<Motif, ReactElement> = {
     star: <StarMotif accent={palette.accent} />,
     forest: <ForestMotif accent={palette.accent} />,
     rabbit: <RabbitMotif accent={palette.accent} />,
