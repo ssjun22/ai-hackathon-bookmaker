@@ -1,0 +1,235 @@
+goal: |
+  초등 1~3학년이 책을 읽고 자기 생각을 정리·표현할 수 있도록 돕는 웹 서비스를
+  2일 해커톤 기간 안에 라이브 데모 가능한 수준으로 구현한다.
+
+  서비스 흐름 3단계:
+    ① 책 이해      — 사전 등록된 책에 대해 챗봇 대화 + 짧은 퀴즈로 감상 정리
+    ② 나만의 책 만들기 — 표지 + 장면 3~5장(자유) + 결말로 5~7페이지짜리
+                     "나만의 책"을 텍스트 + AI 이미지로 생성, 결말 변경 옵션 제공
+    ③ 책장 클로징   — 만든 책이 책장에 꽂히는 Framer Motion 애니메이션으로 마무리
+                     (영속화 X, 시각적 피날레 용도)
+
+constraints:
+  hackathon:
+    duration: 2일
+    team_size: 4
+    roles: [개발자, 콘텐츠 개발자(국어), 디자이너, 기획자]
+  platform:
+    target: 웹 (모바일 반응형)
+    stack: Next.js 16 App Router + Tailwind + shadcn/ui
+    deploy: Vercel (preview URL을 발표장에서 직접 공유)
+    animation: Framer Motion
+  ai:
+    available_credits: Anthropic Claude only
+    text_models: [Claude Sonnet 4.5 (챗봇·텍스트 생성), Claude Haiku 4.5 (퀴즈)]
+    image_api: 별도 결정 필요 (open_decisions 참조)
+    music_api: 사용 안 함
+  content:
+    book_source: 사전 등록된 책 5~10권만
+    rag_full_text: 사용 안 함 (저작권·시간 리스크)
+    book_dataset_owner: 콘텐츠 개발자
+  out_of_scope:
+    - 음악/BGM 생성
+    - 커뮤니티/SNS/공유
+    - 사용자 계정 시스템
+    - 책장의 영속화 (DB 저장·재방문 시 복원)
+    - 네이티브 앱 (iOS/Android)
+  demo:
+    mode: 라이브 (mock·녹화 사용 X)
+    audience: 심사위원이 직접 책 1권을 골라 ①→②→③ 흐름 체험
+
+acceptance_criteria:
+  - id: AC-1
+    text: 사전 등록된 책 1권 이상에 대해 챗봇 3~4턴 + 퀴즈 3문제가 라이브로 동작한다
+  - id: AC-2
+    text: 아이가 한 책에 대해 표지 + 장면 3~5장 + 결말로 구성된 5~7페이지 "나만의 책"을 생성할 수 있다
+  - id: AC-3
+    text: 결말 변경(원작 결말을 아이의 아이디어로 교체) 기능이 옵션으로 동작한다
+  - id: AC-4
+    text: 책 만들기 완료 후 "책장에 꽂히는" Framer Motion 애니메이션이 재생된다
+  - id: AC-5
+    text: 발표장에서 QR 또는 URL로 심사위원이 직접 접속해 ①→②→③ 흐름을 1회 이상 완주할 수 있다
+  - id: AC-6
+    text: 모바일 세로 화면 반응형 레이아웃이 깨지지 않는다
+  - id: AC-7
+    text: 어린이에게 부적절한 출력(폭력·욕설·무서운 이미지)이 가드레일로 차단된다
+
+ontology_schema:
+  name: BookmakerService
+  description: 초등 저학년 책 정리 + 모방창작 서비스 도메인 모델
+  entities:
+    - name: Book
+      description: 사전 등록된 원작 책 (5~10권). 콘텐츠 개발자가 작성.
+      fields:
+        - {name: id, type: string}
+        - {name: title, type: string}
+        - {name: author, type: string}
+        - {name: summary_300, type: string, description: 300자 이내 줄거리}
+        - {name: characters, type: array<Character>}
+        - {name: key_scenes, type: array<Scene>}
+        - {name: original_ending_text, type: string}
+        - {name: chatbot_persona, type: string, description: 톤·말투 가이드}
+        - {name: safety_guardrails, type: array<string>, description: 다루지 말 주제}
+        - {name: quiz_seeds, type: array<Quiz>}
+    - name: Character
+      fields:
+        - {name: name, type: string}
+        - {name: description, type: string}
+        - {name: visual_guide, type: string, description: 일관된 이미지 생성을 위한 외형 묘사}
+    - name: Scene
+      fields:
+        - {name: idx, type: int}
+        - {name: text, type: string}
+        - {name: visual_guide, type: string}
+    - name: Quiz
+      fields:
+        - {name: question, type: string}
+        - {name: choices, type: array<string>}
+        - {name: answer_idx, type: int}
+        - {name: explanation, type: string}
+    - name: ReadingSession
+      description: 한 아이의 ① 단계 진행 (휘발성, 세션 종료 시 소멸)
+      fields:
+        - {name: book_id, type: string}
+        - {name: chat_messages, type: array}
+        - {name: quiz_attempts, type: array}
+        - {name: reflection_text, type: string}
+    - name: MyBook
+      description: 아이가 만든 5~7페이지 "나만의 책" (휘발성)
+      fields:
+        - {name: source_book_id, type: string}
+        - {name: pages, type: array<Page>}
+    - name: Page
+      fields:
+        - {name: type, type: enum, values: [cover, scene, ending]}
+        - {name: text, type: string}
+        - {name: image_url, type: string}
+
+evaluation_principles:
+  - {name: Live demo robustness,    weight: 0.30, description: "데모 중 멈추거나 깨지지 않을 것 (network/rate-limit/timeout 대비)"}
+  - {name: Child appropriateness,   weight: 0.25, description: "어린이 수준의 언어·이미지·UX (큰 버튼, 친근한 톤, 어려운 한자어 X)"}
+  - {name: AI moment of wonder,     weight: 0.20, description: "심사위원이 '오'하는 장면 1개 이상 (이미지 생성 또는 결말 변경)"}
+  - {name: Team handoff clarity,    weight: 0.15, description: "콘텐츠/디자이너/기획자가 작업할 산출물·인터페이스가 명확"}
+  - {name: Scope discipline,        weight: 0.10, description: "잘라낸 기능(음악·커뮤니티)으로 다시 흘러들어가지 않을 것"}
+
+deliverables_by_role:
+  developer:
+    - Next.js 16 + Vercel 배포 환경 (Day 1 오전)
+    - Anthropic Claude SDK 통합 (챗봇·퀴즈·텍스트 생성)
+    - 이미지 생성 API 통합 (open_decisions.image-api 결정 후)
+    - 책 데이터 정적 schema (JSON 또는 MDX)
+    - Framer Motion 책장 애니메이션 통합
+    - Day 2 오후 데모 리허설 1회
+
+  content_writer:
+    - 책 5~10권 selection (저작권 안전 — 공유 저작물·고전 권장)
+    - 책별 dataset (Book ontology의 모든 필드)
+    - 챗봇 가드레일·페르소나 가이드 (책별)
+    - 퀴즈 시드 5문제/책
+
+  designer:
+    - 책별 캐릭터 reference 일러스트 (이미지 일관성용)
+    - 페이지 템플릿 (표지/장면/결말 3종)
+    - 책장 클로징 storyboard + Framer Motion variants 사양
+    - 어린이 UI 키트 (큰 버튼, 친근 폰트, 색약 고려)
+
+  planner:
+    - 입력 UX 의사결정 옵션 매트릭스 → Day 1 오전 align
+    - 화면 wireframe (① + ② + ③)
+    - 데모 시나리오 (시연 책 1권 기반의 1분 30초 흐름)
+
+open_decisions:
+  - id: image-api
+    description: 이미지 생성 API 선택
+    options: [OpenAI gpt-image-1 (자체부담 $5~10), FAL Flux schnell (무료 크레딧), Google Imagen (Vertex)]
+    deadline: Day 1 오전 align
+    owner: 개발자
+    blocks: [AC-2, AC-3]
+
+  - id: child-input-ux
+    description: 아이의 입력 방식 결정
+    options: [음성(Web Speech), 객관식 카드, 키보드+음성 hybrid, 이모지/그림 카드]
+    deadline: Day 1 오전 align
+    owner: 기획자 (개발자가 옵션 매트릭스 제공)
+    blocks: [AC-1, AC-2]
+
+  - id: stage1-flow
+    description: ①단계 챗봇·퀴즈 흐름 패턴
+    options: [챗봇 3~4턴→퀴즈 3문제→마감, 퀴즈 먼저→챗봇 해설, 자유 탭]
+    deadline: Day 1 오전 align
+    owner: 기획자 + 콘텐츠 개발자
+    blocks: [AC-1]
+
+  - id: character-consistency
+    description: 캐릭터 이미지 일관성 처리 방법
+    options:
+      - 디자이너 사전 일러스트 + AI는 배경/포즈만 (가장 안전)
+      - AI 일관성 포기 (해커톤 수준 허용)
+      - gpt-image-1 multi-turn / image-to-image
+    deadline: Day 1 오전 align
+    owner: 디자이너 + 개발자
+    blocks: [AC-2]
+
+  - id: demo-book
+    description: 발표용 시연 책 1권 확정 (메인 시연 + 백업 1권)
+    deadline: Day 1 오전 align
+    owner: 콘텐츠 개발자
+    blocks: [AC-5]
+
+risks:
+  - id: R-1
+    text: 이미지 생성 지연 (장당 2~5초, 5장이면 10~25초)
+    mitigation: 페이지 단위 streaming + skeleton UI, 병렬 생성
+  - id: R-2
+    text: Claude API rate limit (데모 시 동시 접속)
+    mitigation: 키 분리 또는 prompt cache, fallback 응답 미리 준비
+  - id: R-3
+    text: 어린이 입력 인식 실패 (음성/오타)
+    mitigation: 친근한 retry UX ("다시 한 번 말해줄래?")
+  - id: R-4
+    text: 발표장 네트워크 불안정
+    mitigation: Vercel preview URL 백업 + 로컬 시연 동영상 1개 미리 녹화
+  - id: R-5
+    text: 부적절한 AI 출력 (어린이 안전성)
+    mitigation: 시스템 프롬프트 가드레일 + 콘텐츠 필터 + 책별 guardrails 적용
+
+exit_conditions:
+  primary: 모든 acceptance_criteria (AC-1 ~ AC-7) 충족 + Day 2 발표 30분 전 리허설 무사 통과
+  fallback: Day 2 16:00 시점에 AC-1 + AC-2가 시연 책 1권에 대해 동작 (AC-4 미완 허용, AC-3 옵셔널)
+
+schedule:
+  day_1:
+    morning:
+      - 팀 30분 align (open_decisions 5개 모두 결정)
+      - 개발자 환경 셋업 (Next.js + Vercel + Claude SDK)
+      - 콘텐츠 개발자 책 1권 dataset 작성 시작
+      - 디자이너 캐릭터 reference 1세트
+      - 기획자 wireframe 1차
+    afternoon:
+      - 개발자 ① 챗봇 + 퀴즈 PoC (시연 책 1권 기준)
+      - 콘텐츠 개발자 나머지 책 dataset
+      - 디자이너 페이지 템플릿
+    evening:
+      - 개발자 이미지 API spike (선택된 API의 hello-world)
+      - 통합 sync 30분
+  day_2:
+    morning:
+      - 개발자 ② "나만의 책 만들기" 흐름 통합
+      - 디자이너 책장 클로징 애니메이션 완성
+    afternoon:
+      - 개발자 ③ 클로징 통합 + 모바일 반응형 + 가드레일 점검
+      - 데모 시나리오 리허설 1차
+    evening:
+      - 데모 리허설 2~3회 + 백업 영상 녹화 + 발표 자료
+
+metadata:
+  version: 0.1.0
+  created_at: 2026-05-08
+  ambiguity_score: 0.18
+  interview_session: interview_20260508_054925 (MCP 기록 실패, Path B로 직접 진행)
+  generation_mode: Path B (plugin fallback)
+  hackathon: 2-day
+  notes: |
+    이 Seed는 라이브 데모를 절대 기준으로 잡고, 음악·커뮤니티·계정 시스템을
+    의도적으로 잘라냈음. open_decisions 5개는 Day 1 오전 30분 align에서 모두
+    결정해야 일정대로 흐름. 결정이 늦어지면 fallback exit_condition으로 전환.
