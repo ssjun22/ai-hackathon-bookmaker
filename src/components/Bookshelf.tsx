@@ -1,34 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import BookCover from "./BookCover";
-
-const BOOKS = [
-  {
-    id: "star",
-    title: "별이 된 아이",
-    palette: { bg: "#3B5C8F", accent: "#F7D572" },
-    motif: "star" as const,
-  },
-  {
-    id: "forest",
-    title: "숲 속의 비밀",
-    palette: { bg: "#7FA84B", accent: "#3D2E1E" },
-    motif: "forest" as const,
-  },
-  {
-    id: "rabbit",
-    title: "이상한 나라의 토끼",
-    palette: { bg: "#EC9CAE", accent: "#FFFFFF" },
-    motif: "rabbit" as const,
-  },
-  {
-    id: "brave",
-    title: "용감한 하루",
-    palette: { bg: "#D9BC3E", accent: "#5C8240" },
-    motif: "carrot" as const,
-  },
-];
+import { books } from "@/data/books";
 
 const containerVariants = {
   hidden: {},
@@ -68,8 +43,8 @@ export default function Bookshelf() {
           >
             내 서재
           </h2>
-          <button
-            type="button"
+          <Link
+            href="/library"
             className="text-xs focus-visible:outline-none"
             style={{
               color: "var(--color-brown-soft)",
@@ -78,10 +53,12 @@ export default function Bookshelf() {
               minHeight: 32,
               fontWeight: 600,
               lineHeight: 1.2,
+              textDecoration: "none",
+              display: "inline-block",
             }}
           >
             전체 보기 ›
-          </button>
+          </Link>
         </div>
 
         {/* 책 + 선반 영역 */}
@@ -100,20 +77,22 @@ export default function Bookshelf() {
               zIndex: 1,
             }}
           >
-            {BOOKS.map((book) => (
+            {books.map((book) => (
               <motion.div
                 key={book.id}
                 variants={reduceMotion ? undefined : itemVariants}
                 whileTap={reduceMotion ? undefined : { scale: 0.93, y: 2 }}
                 style={{ flexShrink: 0, position: "relative" }}
               >
-                <BookCover
-                  title={book.title}
-                  palette={book.palette}
-                  motif={book.motif}
-                  width={112}
-                  height={150}
-                />
+                <Link href="/library" style={{ display: "block", textDecoration: "none" }}>
+                  <BookCover
+                    title={book.title}
+                    palette={book.palette}
+                    motif={book.motif}
+                    width={112}
+                    height={150}
+                  />
+                </Link>
                 {/* 책 하단 컨택트 섀도우 — 선반 위에 놓인 느낌 */}
                 <div
                   style={{
