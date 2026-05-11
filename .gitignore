@@ -36,3 +36,8 @@ next-env.d.ts
 
 # claude harness
 .claude/harness/
+
+# agentation (dev-only feedback toolbar)
+.agents/
+.claude/skills/agentation
+skills-lock.json

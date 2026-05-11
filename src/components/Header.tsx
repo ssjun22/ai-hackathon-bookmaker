@@ -11,14 +11,13 @@ export default function Header() {
       initial={reduceMotion ? false : { y: -12, opacity: 0 }}
       animate={reduceMotion ? undefined : { y: 0, opacity: 1 }}
       transition={reduceMotion ? undefined : { duration: 0.4, ease: "easeOut" }}
-      className="flex items-center justify-between px-5"
+      className="flex items-center justify-between"
       style={{
-        backgroundColor: "var(--color-card)",
-        boxShadow: "var(--shadow-clay-sm)",
+        backgroundColor: "transparent",
         paddingTop: "calc(14px + env(safe-area-inset-top))",
         paddingBottom: 14,
-        borderBottomLeftRadius: "var(--radius-clay)",
-        borderBottomRightRadius: "var(--radius-clay)",
+        paddingLeft: 24,
+        paddingRight: 24,
       }}
     >
       {/* 아바타 + 인사 텍스트 */}
@@ -29,8 +28,9 @@ export default function Header() {
             width: 48,
             height: 48,
             borderRadius: "50%",
-            border: "3px solid var(--color-green)",
-            boxShadow: "0 2px 6px rgba(120,90,50,0.18)",
+            border: "1.5px solid rgba(120,90,50,0.18)",
+            boxShadow: "0 2px 6px rgba(120,90,50,0.14)",
+            backgroundColor: "var(--color-card)",
           }}
         >
           <Image
@@ -44,8 +44,8 @@ export default function Header() {
         </div>
         <div>
           <p
-            className="font-display text-base font-bold leading-tight"
-            style={{ color: "var(--color-brown)" }}
+            className="font-display text-base leading-tight"
+            style={{ color: "var(--color-brown)", fontWeight: 700 }}
           >
             안녕, 토끼야!
           </p>

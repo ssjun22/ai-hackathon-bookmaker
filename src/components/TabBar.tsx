@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 type Tab = {
@@ -81,7 +80,6 @@ function isActive(href: string, pathname: string): boolean {
 
 export default function TabBar() {
   const pathname = usePathname();
-  const reduceMotion = useReducedMotion();
 
   return (
     <nav
@@ -108,48 +106,27 @@ export default function TabBar() {
             href={tab.href}
             aria-current={active ? "page" : undefined}
             aria-label={tab.label}
-            className="relative flex flex-col items-center justify-center focus-visible:outline-none"
+            className="flex flex-col items-center justify-center focus-visible:outline-none"
             style={{
               textDecoration: "none",
               minWidth: 64,
               minHeight: 48,
               padding: "6px 14px",
-              borderRadius: 999,
+              gap: 3,
             }}
           >
-            {/* 활성 pill */}
-            {active && (
-              <motion.div
-                layoutId="tab-pill"
-                className="absolute"
-                style={{
-                  inset: 0,
-                  borderRadius: 999,
-                  backgroundColor: "rgba(118,176,72,0.18)",
-                  border: "1.5px solid rgba(118,176,72,0.30)",
-                  zIndex: 0,
-                }}
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 380, damping: 30 }
-                }
-              />
-            )}
-            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              {tab.renderIcon(active)}
-              <span
-                className="text-xs"
-                style={{
-                  fontWeight: active ? 700 : 500,
-                  color: active
-                    ? "var(--color-green-deep)"
-                    : "var(--color-brown-soft)",
-                }}
-              >
-                {tab.label}
-              </span>
-            </div>
+            {tab.renderIcon(active)}
+            <span
+              className="text-xs"
+              style={{
+                fontWeight: active ? 700 : 500,
+                color: active
+                  ? "var(--color-green-deep)"
+                  : "var(--color-brown-soft)",
+              }}
+            >
+              {tab.label}
+            </span>
           </Link>
         );
       })}

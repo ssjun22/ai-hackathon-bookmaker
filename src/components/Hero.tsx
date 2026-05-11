@@ -18,9 +18,10 @@ export default function Hero() {
       }
       className="relative overflow-hidden"
       style={{
-        backgroundColor: "var(--color-beige-soft)",
-        minHeight: 320,
+        backgroundColor: "var(--color-beige)",
+        aspectRatio: "1 / 1",
         marginTop: 4,
+        marginBottom: 16,
       }}
     >
       {/* 배경 이미지 (책장·창문·식물 디오라마) */}
@@ -37,7 +38,7 @@ export default function Hero() {
 
       {/* 마스코트 오버레이 */}
       <div
-        className="relative z-10 flex justify-center items-end"
+        className="absolute inset-0 z-10 flex justify-center items-end"
         style={{
           paddingTop: 20,
           paddingBottom: 0,

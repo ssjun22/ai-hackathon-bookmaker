@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Gowun_Dodum } from "next/font/google";
+import { Agentation } from "agentation";
 import "./globals.css";
 import TabBar from "@/components/TabBar";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body>
         {children}
         <TabBar />
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );

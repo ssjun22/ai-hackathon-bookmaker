@@ -15,9 +15,11 @@ export default function RabbitMascot() {
           : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
       }
       style={{
-        width: "78%",
-        maxWidth: 260,
-        margin: "0 auto",
+        width: "92%",
+        maxWidth: 380,
+        marginLeft: "auto",
+        marginRight: "auto",
+        translateY: 100,
         transformOrigin: "bottom center",
         filter: "drop-shadow(0 6px 8px rgba(120,90,50,0.20))",
       }}
@@ -25,8 +27,8 @@ export default function RabbitMascot() {
       <Image
         src="/toki/1.png"
         alt="토키 마스코트"
-        width={260}
-        height={260}
+        width={380}
+        height={380}
         className="w-full h-auto"
         priority
       />
