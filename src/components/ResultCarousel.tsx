@@ -110,7 +110,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         style={{
           position: "relative",
           width: "100%",
-          height: 440,
+          height: 520,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -127,7 +127,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           if (distance > 2) return null;
 
           // 위치 / 크기 / 투명도 / blur는 offset에 따라 분기
-          const x = offset * 200;
+          const x = offset * 240;
           const scale = distance === 0 ? 1 : 0.78;
           const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : 0.18;
           const blur = distance === 0 ? 0 : distance === 1 ? 2.5 : 5;
@@ -152,7 +152,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
               transition={{ type: "spring", stiffness: 260, damping: 28 }}
               style={{
                 position: "absolute",
-                width: 240,
+                width: 290,
                 cursor: distance === 0 ? "grab" : "pointer",
                 pointerEvents: distance > 1 ? "none" : "auto",
               }}
@@ -183,7 +183,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 80,
+                    fontSize: 96,
                   }}
                   aria-hidden="true"
                 >
