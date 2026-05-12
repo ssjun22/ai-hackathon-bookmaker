@@ -98,38 +98,45 @@ export default function BookReaderModal({
             aria-hidden="true"
           />
 
-          {/* 모달 컨테이너 */}
-          <motion.div
-            key={`modal-${book.id}`}
-            layoutId={reduceMotion ? undefined : `book-spine-${book.id}`}
-            variants={modalVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${book.title} 읽기`}
-            onClick={(e) => e.stopPropagation()}
+          {/* 모달 센터링 wrapper — pointerEvents none, 클릭은 backdrop으로 통과 */}
+          <div
             style={{
               position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
+              inset: 0,
               zIndex: 51,
-              width: "min(680px, 92vw)",
-              maxHeight: "88dvh",
               display: "flex",
-              flexDirection: "column",
-              backgroundColor: "#fffdf8",
-              borderRadius: 24,
-              boxShadow:
-                "0 32px 64px rgba(60,40,20,0.30), 0 8px 24px rgba(60,40,20,0.18), inset 0 1px 0 rgba(255,255,255,0.85)",
-              border: "1.5px solid rgba(120,90,50,0.12)",
-              overflow: "hidden",
-              // 모바일: 화면 거의 풀 너비 + 하단 고정
-              // width는 min()으로 처리
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px 12px",
+              pointerEvents: "none",
             }}
           >
+            {/* 모달 컨테이너 */}
+            <motion.div
+              key={`modal-${book.id}`}
+              layoutId={reduceMotion ? undefined : `book-spine-${book.id}`}
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${book.title} 읽기`}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "min(680px, 100%)",
+                maxHeight: "88dvh",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#fffdf8",
+                borderRadius: 24,
+                boxShadow:
+                  "0 32px 64px rgba(60,40,20,0.30), 0 8px 24px rgba(60,40,20,0.18), inset 0 1px 0 rgba(255,255,255,0.85)",
+                border: "1.5px solid rgba(120,90,50,0.12)",
+                overflow: "hidden",
+                pointerEvents: "auto",
+              }}
+            >
             {/* 모달 헤더 */}
             <div
               style={{
@@ -230,7 +237,8 @@ export default function BookReaderModal({
                 flexShrink: 0,
               }}
             />
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
