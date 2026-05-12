@@ -73,6 +73,56 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         </h1>
       </motion.div>
 
+      {/* 인디케이터 */}
+      <div
+        role="tablist"
+        aria-label="페이지 선택"
+        style={{ display: "flex", gap: 6, justifyContent: "center" }}
+      >
+        {pages.map((page, idx) => (
+          <button
+            key={page.pageNumber}
+            type="button"
+            role="tab"
+            aria-selected={idx === activeIndex}
+            aria-label={`${idx + 1} 페이지로 이동`}
+            onClick={() => setActiveIndex(idx)}
+            style={{
+              width: idx === activeIndex ? 18 : 8,
+              height: 8,
+              borderRadius: 4,
+              border: "none",
+              padding: 0,
+              backgroundColor:
+                idx === activeIndex
+                  ? "var(--color-brown)"
+                  : "var(--color-brown-soft)",
+              opacity: idx === activeIndex ? 1 : 0.4,
+              cursor: "pointer",
+              transition: "width 0.2s, opacity 0.2s",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 페이지 카운트 */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={activeIndex}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            fontSize: 12,
+            color: "var(--color-brown-soft)",
+            fontWeight: 600,
+          }}
+        >
+          {activeIndex + 1} / {total}
+        </motion.p>
+      </AnimatePresence>
+
       {/* 캐러셀 */}
       <div
         style={{
@@ -246,56 +296,6 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           ›
         </button>
       </div>
-
-      {/* 인디케이터 */}
-      <div
-        role="tablist"
-        aria-label="페이지 선택"
-        style={{ display: "flex", gap: 6, justifyContent: "center" }}
-      >
-        {pages.map((page, idx) => (
-          <button
-            key={page.pageNumber}
-            type="button"
-            role="tab"
-            aria-selected={idx === activeIndex}
-            aria-label={`${idx + 1} 페이지로 이동`}
-            onClick={() => setActiveIndex(idx)}
-            style={{
-              width: idx === activeIndex ? 18 : 8,
-              height: 8,
-              borderRadius: 4,
-              border: "none",
-              padding: 0,
-              backgroundColor:
-                idx === activeIndex
-                  ? "var(--color-brown)"
-                  : "var(--color-brown-soft)",
-              opacity: idx === activeIndex ? 1 : 0.4,
-              cursor: "pointer",
-              transition: "width 0.2s, opacity 0.2s",
-            }}
-          />
-        ))}
-      </div>
-
-      {/* 페이지 카운트 */}
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={activeIndex}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.15 }}
-          style={{
-            fontSize: 12,
-            color: "var(--color-brown-soft)",
-            fontWeight: 600,
-          }}
-        >
-          {activeIndex + 1} / {total}
-        </motion.p>
-      </AnimatePresence>
 
       {/* 하단 액션 */}
       <motion.div
