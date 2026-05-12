@@ -101,6 +101,7 @@ export default function BookPicker({ books, onSelect }: BookPickerProps) {
               userSelect: "none",
             }}
             aria-label={`${book.title} 선택`}
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {/* 책 표지 */}
             <BookCover

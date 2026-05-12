@@ -410,6 +410,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             fontFamily: "var(--font-body)",
             outline: "none",
             boxShadow: "var(--shadow-clay-sm)",
+            minWidth: 0, // flex-1이 좁아지도록
           }}
           aria-label="대화 입력"
         />
@@ -449,11 +450,19 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         </button>
       </div>
 
-      {/* 타이핑 바운스 애니메이션 */}
+      {/* 타이핑 바운스 애니메이션 + focus-visible */}
       <style>{`
         @keyframes bounce {
           0%, 100% { transform: translateY(0); opacity: 0.5; }
           50% { transform: translateY(-4px); opacity: 1; }
+        }
+        button:focus-visible {
+          outline: 2px solid var(--color-brown);
+          outline-offset: 2px;
+        }
+        input:focus-visible {
+          outline: 2px solid var(--color-brown);
+          outline-offset: 0;
         }
       `}</style>
     </div>

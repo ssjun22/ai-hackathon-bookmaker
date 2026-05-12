@@ -74,6 +74,8 @@ export default function ResultGrid({ storyTitle, pages }: ResultGridProps) {
         variants={reduceMotion ? undefined : containerVariants}
         initial={reduceMotion ? false : "hidden"}
         animate="show"
+        role="list"
+        aria-label="동화책 페이지 목록"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
@@ -83,6 +85,7 @@ export default function ResultGrid({ storyTitle, pages }: ResultGridProps) {
         {pages.map((page) => (
           <motion.div
             key={page.pageNumber}
+            role="listitem"
             variants={reduceMotion ? undefined : cardVariants}
             style={{
               display: "flex",

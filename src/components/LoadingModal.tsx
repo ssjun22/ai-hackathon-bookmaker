@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
@@ -37,6 +38,16 @@ const panelVariantsReduced: Variants = {
 
 export default function LoadingModal({ open }: LoadingModalProps) {
   const reduceMotion = useReducedMotion();
+
+  // 모달 열릴 때 body scroll lock
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   return (
     <AnimatePresence>
