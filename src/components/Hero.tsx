@@ -20,7 +20,7 @@ export default function Hero() {
       style={{
         backgroundColor: "var(--color-beige)",
         aspectRatio: "1 / 1",
-        marginTop: 4,
+        marginTop: 0,
         marginBottom: 16,
       }}
     >
