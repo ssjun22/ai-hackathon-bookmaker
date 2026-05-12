@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Gowun_Dodum } from "next/font/google";
 import { Agentation } from "agentation";
 import "./globals.css";
+import Header from "@/components/Header";
 import TabBar from "@/components/TabBar";
 
 const pretendard = localFont({
@@ -37,7 +38,27 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {children}
+        <div
+          style={{
+            maxWidth: 480,
+            margin: "0 auto",
+            minHeight: "100dvh",
+            backgroundColor: "var(--color-beige)",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 30,
+              backgroundColor: "var(--color-beige)",
+            }}
+          >
+            <Header />
+          </div>
+          {children}
+        </div>
         <TabBar />
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
