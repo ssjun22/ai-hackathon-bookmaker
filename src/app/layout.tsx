@@ -52,7 +52,7 @@ export default function RootLayout({
               position: "sticky",
               top: 0,
               zIndex: 30,
-              backgroundColor: "var(--color-beige)",
+              backgroundColor: "transparent",
             }}
           >
             <Header />
