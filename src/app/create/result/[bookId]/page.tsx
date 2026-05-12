@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import mockResults from "@/data/mockResults";
-import ResultGrid from "@/components/ResultGrid";
+import ResultCarousel from "@/components/ResultCarousel";
 
 interface ResultPageProps {
   params: Promise<{ bookId: string }>;
@@ -21,7 +21,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
         backgroundColor: "var(--color-beige)",
       }}
     >
-      <ResultGrid storyTitle={result.storyTitle} pages={result.pages} />
+      <ResultCarousel storyTitle={result.storyTitle} pages={result.pages} />
     </main>
   );
 }
