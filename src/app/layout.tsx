@@ -20,7 +20,7 @@ const gowunDodum = Gowun_Dodum({
 });
 
 export const metadata: Metadata = {
-  title: "토키 - 나만의 이야기 만들기",
+  title: "북적북적 - 나만의 이야기 만들기",
   description: "아이들을 위한 AI 동화책 만들기 앱. 오늘은 어떤 이야기를 만들까요?",
 };
 
