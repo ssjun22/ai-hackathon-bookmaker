@@ -46,6 +46,9 @@ interface ChatPanelProps {
   onComplete: () => void;
 }
 
+const AI_REPLY_DELAY_MS = 700;
+const ON_COMPLETE_DELAY_MS = 800;
+
 const msgVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { duration: 0.22 } },
@@ -108,8 +111,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           { role: "ai", text: "고마워요! 이제 당신만의 동화책을 만들어 드릴게요 ✨" },
         ]);
         setIsAiThinking(false);
-        setTimeout(() => onComplete(), 800);
-      }, 700);
+        setTimeout(() => onComplete(), ON_COMPLETE_DELAY_MS);
+      }, AI_REPLY_DELAY_MS);
     } else {
       // 다음 AI 질문
       setIsAiThinking(true);
@@ -119,7 +122,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           { role: "ai", text: scenario[nextTurn] },
         ]);
         setIsAiThinking(false);
-      }, 700);
+      }, AI_REPLY_DELAY_MS);
       setTurn(nextTurn);
     }
   }

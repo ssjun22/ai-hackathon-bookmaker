@@ -12,6 +12,9 @@ import type { Book } from "@/data/books";
 
 type Step = "pick" | "chat";
 
+const LOADING_BASE_MS = 1800;
+const LOADING_JITTER_MS = 700;
+
 const slideVariants: Variants = {
   enterFromRight: { x: 40, opacity: 0 },
   center: { x: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 28 } },
@@ -41,7 +44,7 @@ export default function CreatePage() {
     if (!selectedBook) return;
     setIsLoading(true);
     // 1.8~2.5초 가짜 대기 후 결과 페이지로 이동
-    const delay = 1800 + Math.random() * 700;
+    const delay = LOADING_BASE_MS + Math.random() * LOADING_JITTER_MS;
     setTimeout(() => {
       router.push(`/create/result/${selectedBook.id}`);
     }, delay);
