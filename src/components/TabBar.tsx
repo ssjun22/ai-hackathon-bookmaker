@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 type Tab = {
@@ -19,9 +20,9 @@ const tabs: Tab[] = [
         width="24"
         height="24"
         viewBox="0 0 24 24"
-        fill={active ? "var(--color-green-deep)" : "none"}
+        fill="none"
         stroke={active ? "var(--color-green-deep)" : "var(--color-brown-soft)"}
-        strokeWidth="2.2"
+        strokeWidth={active ? 2.4 : 2.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
@@ -80,6 +81,7 @@ function isActive(href: string, pathname: string): boolean {
 
 export default function TabBar() {
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
 
   return (
     <nav
@@ -115,7 +117,39 @@ export default function TabBar() {
               gap: 3,
             }}
           >
-            {tab.renderIcon(active)}
+            {/* 아이콘 + active pill */}
+            <div
+              style={{
+                position: "relative",
+                width: 44,
+                height: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {active && (
+                <motion.span
+                  layoutId="tabbar-active-pill"
+                  initial={false}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { type: "spring", stiffness: 380, damping: 30 }
+                  }
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "rgba(118, 176, 72, 0.16)",
+                    borderRadius: 14,
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+              <span style={{ position: "relative", zIndex: 1, display: "inline-flex" }}>
+                {tab.renderIcon(active)}
+              </span>
+            </div>
             <span
               className="text-xs"
               style={{
