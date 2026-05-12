@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 import type { StoryPage } from "@/data/mockResults";
 
@@ -104,24 +104,6 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           />
         ))}
       </div>
-
-      {/* 페이지 카운트 */}
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={activeIndex}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.15 }}
-          style={{
-            fontSize: 12,
-            color: "var(--color-brown-soft)",
-            fontWeight: 600,
-          }}
-        >
-          {activeIndex + 1} / {total}
-        </motion.p>
-      </AnimatePresence>
 
       {/* 캐러셀 */}
       <div
