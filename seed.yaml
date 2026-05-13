@@ -32,7 +32,7 @@ constraints:
     - 음악/BGM 생성
     - 커뮤니티/SNS/공유
     - 사용자 계정 시스템
-    - 책장의 영속화 (DB 저장·재방문 시 복원)
+    # - 책장의 영속화 (DB 저장·재방문 시 복원)  # 2026-05-13 사이클에서 채택: Supabase + Drizzle 도입
     - 네이티브 앱 (iOS/Android)
   demo:
     mode: 라이브 (mock·녹화 사용 X)
