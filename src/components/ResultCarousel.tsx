@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useLayoutEffect,
+} from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { PanInfo } from "framer-motion";
@@ -37,12 +43,19 @@ function nextEmoji(current: string): string {
 }
 
 type EditState = {
-  body: string;
+  body: string;          // 칩(원래·AI) 선택 결과 — textarea가 비어있을 때 사용
+  customInput: string;   // textarea 직접 입력값 (초기 빈 문자열)
   colorPalette: string;
   emoji: string;
   dirty: boolean;
   regenerating: boolean;
+  isEditing: boolean;
 };
+
+// textarea 우선, 비어있으면 body
+function effectiveBody(s: EditState): string {
+  return s.customInput.trim().length > 0 ? s.customInput : s.body;
+}
 
 export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProps) {
   const router = useRouter();
@@ -50,21 +63,31 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
   const [activeIndex, setActiveIndex] = useState(0);
   const total = pages.length;
 
-  const [editMode, setEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editStates, setEditStates] = useState<EditState[]>(
     pages.map((p) => ({
       body: p.body,
+      customInput: "",
       colorPalette: p.colorPalette,
       emoji: p.emoji,
       dirty: false,
       regenerating: false,
+      isEditing: false,
     }))
   );
 
-  // await 후에도 최신 editStates를 읽기 위한 ref (handleSave의 stale closure 방지)
+  // await 후에도 최신 editStates를 읽기 위한 ref
   const editStatesRef = useRef(editStates);
   editStatesRef.current = editStates;
+
+  // 원본과 동일한 후보는 "원래 문장" 박스와 중복되므로 제외
+  const aiCandidatesByPage = useMemo(
+    () =>
+      pages.map((p) =>
+        (p.bodyCandidates ?? []).filter((c) => c !== p.body)
+      ),
+    [pages]
+  );
 
   const goPrev = () => setActiveIndex((i) => Math.max(0, i - 1));
   const goNext = () => setActiveIndex((i) => Math.min(total - 1, i + 1));
@@ -78,15 +101,57 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
     }
   };
 
-  const updateBody = useCallback((idx: number, value: string) => {
+  const toggleCardEdit = useCallback((idx: number) => {
     setEditStates((prev) =>
-      prev.map((s, i) => (i === idx ? { ...s, body: value, dirty: true } : s))
+      prev.map((s, i) => (i === idx ? { ...s, isEditing: !s.isEditing } : s))
     );
   }, []);
 
-  const pickCandidate = useCallback((idx: number, candidate: string) => {
+  const updateCustomInput = useCallback(
+    (idx: number, value: string) => {
+      setEditStates((prev) =>
+        prev.map((s, i) => {
+          if (i !== idx) return s;
+          const next = { ...s, customInput: value };
+          const original = pages[i].body;
+          next.dirty = effectiveBody(next) !== original;
+          return next;
+        })
+      );
+    },
+    [pages]
+  );
+
+  const pickCandidate = useCallback(
+    (idx: number, candidate: string) => {
+      setEditStates((prev) =>
+        prev.map((s, i) =>
+          i === idx
+            ? {
+                ...s,
+                body: candidate,
+                customInput: "",
+                dirty: candidate !== pages[i].body,
+              }
+            : s
+        )
+      );
+    },
+    [pages]
+  );
+
+  const resetCardBody = useCallback((idx: number, originalBody: string) => {
     setEditStates((prev) =>
-      prev.map((s, i) => (i === idx ? { ...s, body: candidate, dirty: true } : s))
+      prev.map((s, i) =>
+        i === idx
+          ? {
+              ...s,
+              body: originalBody,
+              customInput: "",
+              dirty: false,
+            }
+          : s
+      )
     );
   }, []);
 
@@ -135,7 +200,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
       const savedPages: SavedPage[] = pages.map((p, i) => ({
         pageNumber: p.pageNumber,
         title: p.title,
-        body: latest[i].body,
+        body: effectiveBody(latest[i]),
         colorPalette: latest[i].colorPalette,
         emoji: latest[i].emoji,
         imageUrl: p.imageUrl,
@@ -157,10 +222,40 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
     }
   }, [pages, storyTitle, regenDirty, router]);
 
-  const hasDirty = editStates.some((s) => s.dirty);
   const isRegenerating = editStates.some((s) => s.regenerating);
 
-  const carouselHeight = editMode ? 640 : 520;
+  // 모든 카드의 ref를 array에 보관 — framer-motion의 ref callback 재호출 한계 우회
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+
+  // activeIndex 또는 활성 카드 isEditing 변경 시 측정 + 그 카드에 ResizeObserver 부착
+  const activeIsEditing = editStates[activeIndex]?.isEditing ?? false;
+  useLayoutEffect(() => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    const el = cardRefs.current[activeIndex];
+    if (!el) return;
+    setMeasuredHeight(el.offsetHeight);
+    if (typeof ResizeObserver !== "undefined") {
+      const obs = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setMeasuredHeight(entry.contentRect.height);
+        }
+      });
+      obs.observe(el);
+      observerRef.current = obs;
+    }
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [activeIndex, activeIsEditing]);
+
+  // 여유 마진 — transition 시간차와 subpixel 라운딩 보정
+  const carouselHeight = Math.max((measuredHeight ?? 0) + 24, 520);
+
+  const isLastCard = activeIndex === total - 1;
 
   return (
     <div
@@ -177,13 +272,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         initial={reduceMotion ? false : { opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        style={{
-          textAlign: "center",
-          padding: "0 16px",
-          position: "relative",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
+        style={{ textAlign: "center", padding: "0 16px" }}
       >
         <p
           style={{
@@ -194,7 +283,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
             textTransform: "uppercase",
           }}
         >
-          {editMode ? "내 이야기 편집하기" : "나만의 동화책 완성!"}
+          나만의 동화책 완성!
         </p>
         <h1
           className="font-display"
@@ -209,37 +298,6 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         >
           {storyTitle}
         </h1>
-        {editMode && (
-          <button
-            type="button"
-            onClick={() => setEditMode(false)}
-            disabled={isSaving || isRegenerating}
-            aria-label="편집 모드 끝내기"
-            style={{
-              position: "absolute",
-              right: 16,
-              top: 0,
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              border: "var(--border-clay)",
-              backgroundColor: "var(--color-card)",
-              color: "var(--color-brown)",
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: isSaving || isRegenerating ? "not-allowed" : "pointer",
-              opacity: isSaving || isRegenerating ? 0.4 : 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "var(--shadow-clay-sm)",
-              padding: 0,
-              lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
-        )}
       </motion.div>
 
       {/* 인디케이터 */}
@@ -265,12 +323,11 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                 borderRadius: 4,
                 border: "none",
                 padding: 0,
-                backgroundColor:
-                  editMode && isDirty
-                    ? "#E07A5F"
-                    : isActive
-                      ? "var(--color-brown)"
-                      : "var(--color-brown-soft)",
+                backgroundColor: isDirty
+                  ? "#E07A5F"
+                  : isActive
+                    ? "var(--color-brown)"
+                    : "var(--color-brown-soft)",
                 opacity: isActive ? 1 : 0.4,
                 cursor: "pointer",
                 transition: "width 0.2s, opacity 0.2s, background-color 0.2s",
@@ -287,11 +344,11 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           width: "100%",
           height: carouselHeight,
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "center",
           overflow: "hidden",
           touchAction: "pan-y",
-          transition: "height 0.3s ease",
+          transition: "height 0.2s ease-out",
         }}
         role="region"
         aria-roledescription="carousel"
@@ -303,7 +360,8 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           if (distance > 2) return null;
 
           const isActive = distance === 0;
-          const isEditingThisCard = editMode && isActive;
+          const cardState = editStates[idx];
+          const isThisEditing = cardState.isEditing && isActive;
 
           const x = offset * 240;
           const scale = isActive ? 1 : 0.78;
@@ -311,8 +369,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           const blur = isActive ? 0 : distance === 1 ? 2.5 : 5;
           const zIndex = 10 - distance;
 
-          const cardState = editStates[idx];
-          const displayBody = cardState.body;
+          const displayBody = effectiveBody(cardState);
           const displayPalette = cardState.colorPalette;
           const displayEmoji = cardState.emoji;
           const isThisDirty = cardState.dirty;
@@ -321,11 +378,14 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           return (
             <motion.div
               key={page.pageNumber}
+              ref={(el) => {
+                cardRefs.current[idx] = el;
+              }}
               role="group"
               aria-roledescription="slide"
               aria-label={`${page.pageNumber} / ${total}: ${page.title}`}
               aria-hidden={!isActive}
-              drag={isActive && !isEditingThisCard ? "x" : false}
+              drag={isActive && !isThisEditing ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               onDragEnd={handleDragEnd}
@@ -335,14 +395,14 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                 position: "absolute",
                 width: 290,
                 cursor: isActive
-                  ? isEditingThisCard
+                  ? isThisEditing
                     ? "auto"
                     : "grab"
                   : "pointer",
                 pointerEvents: distance > 1 ? "none" : "auto",
               }}
               onClick={() => {
-                if (isEditingThisCard) return;
+                if (isThisEditing) return;
                 if (offset === 1) goNext();
                 else if (offset === -1) goPrev();
               }}
@@ -363,13 +423,12 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                   <div
                     style={{
                       backgroundColor: displayPalette,
-                      aspectRatio: isEditingThisCard ? "3 / 2" : "3 / 4",
+                      aspectRatio: isThisEditing ? "3 / 2" : "3 / 4",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: isEditingThisCard ? 72 : 96,
-                      transition:
-                        "background-color 0.4s ease, aspect-ratio 0.3s ease, font-size 0.3s ease",
+                      fontSize: isThisEditing ? 72 : 96,
+                      transition: "background-color 0.4s ease",
                     }}
                     aria-hidden="true"
                   >
@@ -406,12 +465,12 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                       displayEmoji
                     )}
                   </div>
-                  {isEditingThisCard && isThisDirty && !isThisRegen && (
+                  {isThisEditing && isThisDirty && !isThisRegen && (
                     <div
                       style={{
                         position: "absolute",
-                        top: 8,
-                        right: 8,
+                        top: 10,
+                        left: 10,
                         backgroundColor: "#E07A5F",
                         color: "#fff",
                         fontSize: 10,
@@ -423,6 +482,36 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                       수정됨
                     </div>
                   )}
+                  {isActive && !isThisEditing && (
+                    <button
+                      type="button"
+                      onClick={() => toggleCardEdit(idx)}
+                      disabled={isThisRegen}
+                      aria-label="이 페이지 편집하기"
+                      className="edit-toggle-btn"
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        padding: "6px 12px",
+                        borderRadius: 16,
+                        border: "1.5px solid var(--color-brown)",
+                        backgroundColor: "var(--color-card)",
+                        color: "var(--color-brown)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: isThisRegen ? "not-allowed" : "pointer",
+                        lineHeight: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "var(--shadow-clay-sm)",
+                        zIndex: 5,
+                      }}
+                    >
+                      내가 써볼래!
+                    </button>
+                  )}
                 </div>
 
                 {/* 텍스트 영역 */}
@@ -431,9 +520,52 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                     padding: "14px 16px 16px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: isEditingThisCard ? 10 : 6,
+                    gap: isThisEditing ? 10 : 6,
+                    position: "relative",
                   }}
                 >
+                  {isActive && isThisEditing && (
+                    <button
+                      type="button"
+                      onClick={() => toggleCardEdit(idx)}
+                      disabled={isThisRegen}
+                      aria-label="편집 영역 접기"
+                      className="edit-toggle-btn is-editing"
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        width: 30,
+                        height: 30,
+                        padding: 0,
+                        borderRadius: "50%",
+                        border: "1.5px solid var(--color-brown)",
+                        backgroundColor: "var(--color-card)",
+                        color: "var(--color-brown)",
+                        cursor: isThisRegen ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "var(--shadow-clay-sm)",
+                        zIndex: 5,
+                      }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m18 15-6-6-6 6" />
+                      </svg>
+                    </button>
+                  )}
+
                   <p
                     className="font-display"
                     style={{
@@ -441,14 +573,63 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                       fontWeight: 700,
                       color: "var(--color-brown-soft)",
                       lineHeight: 1.2,
+                      paddingRight: isActive && isThisEditing ? 44 : 0,
                     }}
                   >
                     {page.pageNumber}. {page.title}
                   </p>
 
-                  {isEditingThisCard ? (
-                    <>
-                      {page.bodyCandidates && page.bodyCandidates.length > 0 && (
+                  {isThisEditing ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      {/* 기존 문장 */}
+                      <div>
+                        <p
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "var(--color-brown-soft)",
+                            marginBottom: 6,
+                          }}
+                        >
+                          원래 문장
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => resetCardBody(idx, page.body)}
+                          aria-label="원래 문장으로 되돌리기"
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "8px 10px",
+                            borderRadius: 10,
+                            border:
+                              displayBody === page.body
+                                ? "2px solid var(--color-brown)"
+                                : "1px dashed var(--color-brown-soft)",
+                            backgroundColor:
+                              displayBody === page.body
+                                ? "rgba(93,64,39,0.08)"
+                                : "rgba(93,64,39,0.04)",
+                            fontSize: 12,
+                            color: "var(--color-brown)",
+                            lineHeight: 1.5,
+                            cursor: "pointer",
+                            wordBreak: "keep-all",
+                            fontFamily: "var(--font-body)",
+                          }}
+                        >
+                          {page.body}
+                        </button>
+                      </div>
+
+                      {aiCandidatesByPage[idx].length > 0 && (
                         <div>
                           <p
                             style={{
@@ -463,7 +644,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                           <div
                             style={{ display: "flex", flexDirection: "column", gap: 6 }}
                           >
-                            {page.bodyCandidates.map((candidate, cidx) => (
+                            {aiCandidatesByPage[idx].map((candidate, cidx) => (
                               <button
                                 key={cidx}
                                 type="button"
@@ -503,13 +684,13 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                             marginBottom: 4,
                           }}
                         >
-                          직접 수정하기
+                          직접 써보기
                         </p>
                         <textarea
-                          value={displayBody}
-                          onChange={(e) => updateBody(idx, e.target.value)}
+                          value={cardState.customInput}
+                          onChange={(e) => updateCustomInput(idx, e.target.value)}
                           rows={3}
-                          placeholder="내용을 직접 입력해보세요..."
+                          placeholder="나만의 이야기로 다시 써보세요"
                           style={{
                             width: "100%",
                             padding: "10px 12px",
@@ -526,7 +707,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                           }}
                         />
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <p
                       style={{
@@ -555,6 +736,8 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           style={{
             position: "absolute",
             left: 8,
+            top: "35%",
+            transform: "translateY(-50%)",
             zIndex: 20,
             width: 40,
             height: 40,
@@ -562,165 +745,152 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
             border: "var(--border-clay)",
             backgroundColor: "var(--color-card)",
             color: "var(--color-brown)",
-            fontSize: 18,
-            fontWeight: 700,
             cursor: activeIndex === 0 ? "not-allowed" : "pointer",
             opacity: activeIndex === 0 ? 0.35 : 1,
             boxShadow: "var(--shadow-clay-sm)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
           }}
         >
-          ‹
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
         </button>
-        <button
-          type="button"
-          onClick={goNext}
-          disabled={activeIndex === total - 1}
-          aria-label="다음 페이지"
-          className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-          style={{
-            position: "absolute",
-            right: 8,
-            zIndex: 20,
-            width: 40,
-            height: 40,
-            borderRadius: "50%",
-            border: "var(--border-clay)",
-            backgroundColor: "var(--color-card)",
-            color: "var(--color-brown)",
-            fontSize: 18,
-            fontWeight: 700,
-            cursor: activeIndex === total - 1 ? "not-allowed" : "pointer",
-            opacity: activeIndex === total - 1 ? 0.35 : 1,
-            boxShadow: "var(--shadow-clay-sm)",
-          }}
-        >
-          ›
-        </button>
+        {isLastCard ? (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || isRegenerating}
+            aria-label={
+              isSaving
+                ? "저장 중"
+                : isRegenerating
+                  ? "이미지 만드는 중"
+                  : "나의 서재에 저장하기"
+            }
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "35%",
+              transform: "translateY(-50%)",
+              zIndex: 20,
+              width: 48,
+              height: 48,
+              padding: 0,
+              borderRadius: "50%",
+              border: "none",
+              backgroundColor: "var(--color-brown)",
+              color: "#fffdf8",
+              cursor: isSaving || isRegenerating ? "not-allowed" : "pointer",
+              opacity: isSaving || isRegenerating ? 0.6 : 1,
+              boxShadow: "var(--shadow-clay)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {isSaving || isRegenerating ? (
+              <span
+                style={{
+                  width: 18,
+                  height: 18,
+                  border: "2px solid rgba(255,255,255,0.4)",
+                  borderTop: "2px solid #fff",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }}
+              />
+            ) : (
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="다음 페이지"
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "35%",
+              transform: "translateY(-50%)",
+              zIndex: 20,
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              border: "var(--border-clay)",
+              backgroundColor: "var(--color-card)",
+              color: "var(--color-brown)",
+              cursor: "pointer",
+              boxShadow: "var(--shadow-clay-sm)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* 편집 모드 dirty 요약 */}
-      {editMode && hasDirty && (
-        <div
-          style={{
-            width: "min(340px, 92vw)",
-            padding: "10px 14px",
-            borderRadius: 12,
-            backgroundColor: "rgba(224,122,95,0.1)",
-            border: "1px solid rgba(224,122,95,0.3)",
-          }}
-        >
-          <p style={{ fontSize: 12, color: "#C05A40", fontWeight: 600 }}>
-            수정된 페이지:{" "}
-            {editStates
-              .map((s, i) => (s.dirty ? `${i + 1}장` : null))
-              .filter(Boolean)
-              .join(", ")}
-          </p>
-          <p style={{ fontSize: 11, color: "#C05A40", marginTop: 2 }}>
-            재생성 버튼을 눌러 이미지를 업데이트하세요.
-          </p>
-        </div>
-      )}
-
-      {/* 하단 액션 */}
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          width: "min(340px, 92vw)",
-        }}
-      >
-        {editMode ? (
-          <>
-            <button
-              type="button"
-              onClick={regenDirty}
-              disabled={!hasDirty || isRegenerating}
-              style={{
-                padding: "13px 20px",
-                borderRadius: 24,
-                border: "2px solid var(--color-brown)",
-                backgroundColor: "transparent",
-                color: "var(--color-brown)",
-                fontSize: 15,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-                cursor: hasDirty && !isRegenerating ? "pointer" : "not-allowed",
-                opacity: !hasDirty || isRegenerating ? 0.4 : 1,
-              }}
-            >
-              {isRegenerating ? "이미지 재생성 중..." : "🔄 이미지 재생성"}
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving || isRegenerating}
-              style={{
-                padding: "14px 20px",
-                borderRadius: 24,
-                border: "none",
-                backgroundColor: "var(--color-brown)",
-                color: "#fffdf8",
-                fontSize: 15,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-                cursor: isSaving || isRegenerating ? "not-allowed" : "pointer",
-                opacity: isSaving || isRegenerating ? 0.6 : 1,
-                boxShadow: "var(--shadow-clay-sm)",
-              }}
-            >
-              {isSaving ? "저장 중..." : "📚 나의 서재에 저장하기"}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setEditMode(true)}
-              style={{
-                padding: "13px 28px",
-                borderRadius: 24,
-                border: "2px solid var(--color-brown)",
-                backgroundColor: "transparent",
-                color: "var(--color-brown)",
-                fontSize: 15,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-clay-sm)",
-              }}
-            >
-              ✏️ 내용 편집하기
-            </button>
-            <a
-              href="/create"
-              style={{
-                display: "inline-block",
-                padding: "12px 28px",
-                borderRadius: 24,
-                backgroundColor: "var(--color-brown)",
-                color: "#fffdf8",
-                fontSize: 14,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-                textDecoration: "none",
-                boxShadow: "var(--shadow-clay-sm)",
-                textAlign: "center",
-              }}
-            >
-              다른 책으로 만들기
-            </a>
-          </>
-        )}
-      </motion.div>
 
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        .edit-toggle-btn {
+          opacity: 0.5;
+          transition: opacity 0.2s ease, background-color 0.2s, color 0.2s;
+        }
+        .edit-toggle-btn:hover:not(:disabled),
+        .edit-toggle-btn:focus-visible:not(:disabled) {
+          opacity: 1;
+        }
+        .edit-toggle-btn.is-editing {
+          opacity: 1;
+        }
+        .edit-toggle-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
       `}</style>
     </div>
