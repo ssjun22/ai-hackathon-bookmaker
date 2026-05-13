@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { listBooks } from "@/lib/myBookStorage";
-import type { SavedBook } from "@/lib/myBookStorage";
+import type { MyBook } from "@/lib/types";
 
 const containerVariants = {
   hidden: {},
@@ -24,7 +23,7 @@ function SavedBookCard({
   book,
   reduceMotion,
 }: {
-  book: SavedBook;
+  book: MyBook;
   reduceMotion: boolean | null;
 }) {
   return (
@@ -176,12 +175,21 @@ function CreateSlot({ reduceMotion }: { reduceMotion: boolean | null }) {
 
 export default function Bookshelf() {
   const reduceMotion = useReducedMotion();
-  const [books, setBooks] = useState<SavedBook[]>([]);
+  const [books, setBooks] = useState<MyBook[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setBooks(listBooks());
-    setMounted(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/my-books");
+        if (res.ok) {
+          const data: MyBook[] = await res.json();
+          setBooks(data);
+        }
+      } finally {
+        setMounted(true);
+      }
+    })();
   }, []);
 
   return (

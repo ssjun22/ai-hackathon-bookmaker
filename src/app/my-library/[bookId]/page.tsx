@@ -2,17 +2,15 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getBook } from "@/lib/myBookStorage";
-import type { SavedBook, SavedPage } from "@/lib/myBookStorage";
-import type { StoryPage } from "@/data/mockResults";
+import type { MyBook, MyBookPage, StoryPage } from "@/lib/types";
 import ResultCarousel from "@/components/ResultCarousel";
 
 interface BookViewerPageProps {
   params: Promise<{ bookId: string }>;
 }
 
-/** SavedPage[] → StoryPage[] 어댑터 (ResultCarousel 재사용용) */
-function toStoryPages(pages: SavedPage[]): StoryPage[] {
+/** MyBookPage[] → StoryPage[] 어댑터 (ResultCarousel 재사용용) */
+function toStoryPages(pages: MyBookPage[]): StoryPage[] {
   return pages.map((p) => ({
     pageNumber: p.pageNumber,
     title: p.title,
@@ -27,11 +25,22 @@ function toStoryPages(pages: SavedPage[]): StoryPage[] {
 export default function BookViewerPage({ params }: BookViewerPageProps) {
   const { bookId } = use(params);
   const router = useRouter();
-  const [book, setBook] = useState<SavedBook | null | undefined>(undefined);
+  const [book, setBook] = useState<MyBook | null | undefined>(undefined);
 
   useEffect(() => {
-    const found = getBook(bookId);
-    setBook(found);
+    (async () => {
+      try {
+        const res = await fetch(`/api/my-books/${bookId}`);
+        if (res.ok) {
+          const data: MyBook = await res.json();
+          setBook(data);
+        } else {
+          setBook(null);
+        }
+      } catch {
+        setBook(null);
+      }
+    })();
   }, [bookId]);
 
   if (book === undefined) {

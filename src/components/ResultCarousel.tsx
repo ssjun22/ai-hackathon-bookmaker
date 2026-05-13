@@ -10,9 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { PanInfo } from "framer-motion";
-import type { StoryPage } from "@/data/mockResults";
-import { saveBook } from "@/lib/myBookStorage";
-import type { SavedPage } from "@/lib/myBookStorage";
+import type { StoryPage, MyBookPage } from "@/lib/types";
 
 interface ResultCarouselProps {
   storyTitle: string;
@@ -197,7 +195,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
       }
 
       const latest = editStatesRef.current;
-      const savedPages: SavedPage[] = pages.map((p, i) => ({
+      const savedPages: MyBookPage[] = pages.map((p, i) => ({
         pageNumber: p.pageNumber,
         title: p.title,
         body: effectiveBody(latest[i]),
@@ -206,17 +204,25 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         imageUrl: p.imageUrl,
       }));
 
-      const bookSaved = {
-        id: crypto.randomUUID(),
-        storyTitle,
-        coverEmoji: latest[0]?.emoji ?? "📖",
-        colorPalette: latest[0]?.colorPalette ?? "#D9BC3E",
-        pages: savedPages,
-        createdAt: new Date().toISOString(),
-      };
+      const res = await fetch("/api/my-books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storyTitle,
+          coverEmoji: latest[0]?.emoji ?? "📖",
+          colorPalette: latest[0]?.colorPalette ?? "#D9BC3E",
+          pages: savedPages,
+        }),
+      });
 
-      saveBook(bookSaved);
-      router.push(`/my-library?new=${bookSaved.id}`);
+      if (!res.ok) {
+        alert("저장에 실패했습니다.");
+        setIsSaving(false);
+        return;
+      }
+
+      const { id } = await res.json() as { id: string };
+      router.push(`/my-library?new=${id}`);
     } finally {
       setIsSaving(false);
     }

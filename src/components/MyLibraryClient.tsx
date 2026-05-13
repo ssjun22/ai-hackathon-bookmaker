@@ -3,8 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { listBooks } from "@/lib/myBookStorage";
-import type { SavedBook } from "@/lib/myBookStorage";
+import type { MyBook } from "@/lib/types";
 
 interface MyLibraryClientProps {
   // 신규 저장된 bookId (URL ?new=... 에서 추출해 전달)
@@ -27,7 +26,7 @@ function BookCard({
   isNew,
   onClick,
 }: {
-  book: SavedBook;
+  book: MyBook;
   isNew: boolean;
   onClick: () => void;
 }) {
@@ -222,11 +221,22 @@ function EmptyShelf() {
 
 export default function MyLibraryClient({ newBookId }: MyLibraryClientProps) {
   const router = useRouter();
-  const [books, setBooks] = useState<SavedBook[]>([]);
+  const [books, setBooks] = useState<MyBook[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const clearedRef = useRef(false);
 
   useEffect(() => {
-    setBooks(listBooks());
+    (async () => {
+      try {
+        const res = await fetch("/api/my-books");
+        if (res.ok) {
+          const data: MyBook[] = await res.json();
+          setBooks(data);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   // URL에서 ?new= 쿼리 제거 (새로고침 시 애니메이션 재실행 방지)
@@ -283,7 +293,9 @@ export default function MyLibraryClient({ newBookId }: MyLibraryClientProps) {
             marginTop: 4,
           }}
         >
-          {books.length > 0
+          {isLoading
+            ? "불러오는 중..."
+            : books.length > 0
             ? `내가 만든 동화책 ${books.length}권`
             : "아직 비어 있어요"}
         </p>
