@@ -1,4 +1,7 @@
+import { config as loadEnv } from 'dotenv';
 import type { Config } from 'drizzle-kit';
+
+loadEnv({ path: '.env.local' });
 
 export default {
   dialect: 'postgresql',
