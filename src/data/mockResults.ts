@@ -27,7 +27,7 @@ export type MockResult = {
 const mockResults: Record<string, MockResult> = {
   star: {
     bookId: "star",
-    storyTitle: "냄새 맡은 값 — 나의 동화",
+    storyTitle: "냄새 맡은 값",
     pages: [
       {
         pageNumber: 1,
@@ -112,7 +112,7 @@ const mockResults: Record<string, MockResult> = {
 
   forest: {
     bookId: "forest",
-    storyTitle: "소금을 만드는 맷돌 — 나의 동화",
+    storyTitle: "소금을 만드는 맷돌",
     pages: [
       {
         pageNumber: 1,
@@ -197,7 +197,7 @@ const mockResults: Record<string, MockResult> = {
 
   rabbit: {
     bookId: "rabbit",
-    storyTitle: "송아지와 바꾼 무 — 나의 동화",
+    storyTitle: "송아지와 바꾼 무",
     pages: [
       {
         pageNumber: 1,
@@ -282,7 +282,7 @@ const mockResults: Record<string, MockResult> = {
 
   brave: {
     bookId: "brave",
-    storyTitle: "소금장수와 기름장수 — 나의 동화",
+    storyTitle: "소금장수와 기름장수",
     pages: [
       {
         pageNumber: 1,

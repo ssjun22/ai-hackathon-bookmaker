@@ -32,7 +32,7 @@ const tabs: Tab[] = [
     ),
   },
   {
-    href: "/library",
+    href: "/my-library",
     label: "나의 서재",
     renderIcon: (active) => (
       <svg
