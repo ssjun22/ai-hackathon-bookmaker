@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { listBooks } from "@/lib/myBookStorage";
 import type { SavedBook } from "@/lib/myBookStorage";

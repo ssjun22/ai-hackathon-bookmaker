@@ -38,12 +38,11 @@ type EditState = {
 };
 
 interface ResultEditorProps {
-  bookId: string;
   storyTitle: string;
   pages: StoryPage[];
 }
 
-export default function ResultEditor({ bookId, storyTitle, pages }: ResultEditorProps) {
+export default function ResultEditor({ storyTitle, pages }: ResultEditorProps) {
   const router = useRouter();
 
   const [editStates, setEditStates] = useState<EditState[]>(

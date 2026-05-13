@@ -29,7 +29,6 @@ export default function ResultPage({ params }: ResultPageProps) {
         }}
       >
         <ResultEditor
-          bookId={bookId}
           storyTitle={result.storyTitle}
           pages={result.pages}
         />
