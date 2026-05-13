@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import type { Book } from "@/lib/types";
+import { getBookVisuals } from "@/lib/bookVisuals";
 
 interface BookReaderModalProps {
   book: Book | null;
@@ -233,7 +234,7 @@ export default function BookReaderModal({
               aria-hidden="true"
               style={{
                 height: 4,
-                background: `linear-gradient(to right, ${book.palette.bg}88, ${book.ribbonColor}88, ${book.palette.bg}88)`,
+                background: (() => { const v = getBookVisuals(book.id); return `linear-gradient(to right, ${v.palette.bg}88, ${v.ribbonColor}88, ${v.palette.bg}88)`; })(),
                 flexShrink: 0,
               }}
             />

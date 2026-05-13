@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
 import type { Book } from "@/lib/types";
+import { getBookVisuals } from "@/lib/bookVisuals";
 
 // 책별 2~3턴 mock 시나리오
 const SCENARIOS: Record<string, string[]> = {
@@ -57,6 +58,7 @@ const msgVariants: Variants = {
 export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const reduceMotion = useReducedMotion();
   const scenario = SCENARIOS[book.id] ?? DEFAULT_SCENARIO;
+  const visuals = getBookVisuals(book.id);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "ai", text: scenario[0] },
@@ -276,11 +278,11 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                       : "18px 18px 18px 4px",
                   backgroundColor:
                     msg.role === "user"
-                      ? book.palette.bg
+                      ? visuals.palette.bg
                       : "var(--color-card)",
                   color:
                     msg.role === "user"
-                      ? book.palette.titleColor ?? "#fff"
+                      ? visuals.palette.titleColor ?? "#fff"
                       : "var(--color-brown)",
                   boxShadow: "var(--shadow-clay-sm)",
                   fontSize: 14,
@@ -361,10 +363,10 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             borderRadius: "50%",
             border: "var(--border-clay)",
             backgroundColor: isListening
-              ? book.palette.bg
+              ? visuals.palette.bg
               : "var(--color-card)",
             color: isListening
-              ? book.palette.titleColor ?? "#fff"
+              ? visuals.palette.titleColor ?? "#fff"
               : "var(--color-brown-soft)",
             cursor: isSupported ? "pointer" : "not-allowed",
             display: "flex",
@@ -430,11 +432,11 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             border: "var(--border-clay)",
             backgroundColor:
               inputValue.trim() && !isAiThinking
-                ? book.palette.bg
+                ? visuals.palette.bg
                 : "var(--color-card)",
             color:
               inputValue.trim() && !isAiThinking
-                ? book.palette.titleColor ?? "#fff"
+                ? visuals.palette.titleColor ?? "#fff"
                 : "var(--color-brown-soft)",
             cursor: inputValue.trim() && !isAiThinking ? "pointer" : "not-allowed",
             display: "flex",
