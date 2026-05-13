@@ -20,6 +20,7 @@ export default function BookReaderModal({
   onClose,
 }: BookReaderModalProps) {
   const reduceMotion = useReducedMotion();
+  const visuals = book ? getBookVisuals(book.id) : null;
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // ESC 키 닫힘
@@ -234,7 +235,9 @@ export default function BookReaderModal({
               aria-hidden="true"
               style={{
                 height: 4,
-                background: (() => { const v = getBookVisuals(book.id); return `linear-gradient(to right, ${v.palette.bg}88, ${v.ribbonColor}88, ${v.palette.bg}88)`; })(),
+                background: visuals
+                  ? `linear-gradient(to right, ${visuals.palette.bg}88, ${visuals.ribbonColor}88, ${visuals.palette.bg}88)`
+                  : undefined,
                 flexShrink: 0,
               }}
             />
