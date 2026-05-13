@@ -177,7 +177,13 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         initial={reduceMotion ? false : { opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        style={{ textAlign: "center", padding: "0 16px" }}
+        style={{
+          textAlign: "center",
+          padding: "0 16px",
+          position: "relative",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
       >
         <p
           style={{
@@ -203,6 +209,37 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         >
           {storyTitle}
         </h1>
+        {editMode && (
+          <button
+            type="button"
+            onClick={() => setEditMode(false)}
+            disabled={isSaving || isRegenerating}
+            aria-label="편집 모드 끝내기"
+            style={{
+              position: "absolute",
+              right: 16,
+              top: 0,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              border: "var(--border-clay)",
+              backgroundColor: "var(--color-card)",
+              color: "var(--color-brown)",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: isSaving || isRegenerating ? "not-allowed" : "pointer",
+              opacity: isSaving || isRegenerating ? 0.4 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "var(--shadow-clay-sm)",
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+        )}
       </motion.div>
 
       {/* 인디케이터 */}
@@ -228,11 +265,12 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
                 borderRadius: 4,
                 border: "none",
                 padding: 0,
-                backgroundColor: isDirty
-                  ? "#E07A5F"
-                  : isActive
-                    ? "var(--color-brown)"
-                    : "var(--color-brown-soft)",
+                backgroundColor:
+                  editMode && isDirty
+                    ? "#E07A5F"
+                    : isActive
+                      ? "var(--color-brown)"
+                      : "var(--color-brown-soft)",
                 opacity: isActive ? 1 : 0.4,
                 cursor: "pointer",
                 transition: "width 0.2s, opacity 0.2s, background-color 0.2s",
