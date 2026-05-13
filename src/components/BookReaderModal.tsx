@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import type { Book } from "@/data/books";
+import type { Book } from "@/lib/types";
 
 interface BookReaderModalProps {
   book: Book | null;

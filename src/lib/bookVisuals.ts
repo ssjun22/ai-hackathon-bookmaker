@@ -15,6 +15,8 @@ export type BookVisuals = {
   palette: Palette;
   motif: Motif;
   ribbonColor: string;
+  /** public/books/ 아래 파일명 (한글 포함). library 페이지 본문 로딩용. */
+  contentFile: string;
 };
 
 const BOOK_VISUALS: Record<string, BookVisuals> = {
@@ -22,21 +24,25 @@ const BOOK_VISUALS: Record<string, BookVisuals> = {
     palette: { bg: '#3B5C8F', accent: '#F7D572', titleColor: '#F7D572' },
     motif: 'star',
     ribbonColor: '#D85F4A',
+    contentFile: '냄새 맡은 값.txt',
   },
   forest: {
     palette: { bg: '#7FA84B', accent: '#3D2E1E', titleColor: '#FFFBF0' },
     motif: 'forest',
     ribbonColor: '#E8A838',
+    contentFile: '소금을 만드는 맷돌.txt',
   },
   rabbit: {
     palette: { bg: '#EC9CAE', accent: '#FFFFFF', titleColor: '#3D2E1E' },
     motif: 'rabbit',
     ribbonColor: '#7CB5E0',
+    contentFile: '송아지와 바꾼 무.txt',
   },
   brave: {
     palette: { bg: '#D9BC3E', accent: '#5C8240', titleColor: '#3D2E1E' },
     motif: 'carrot',
     ribbonColor: '#95C566',
+    contentFile: '소금장수와 기름장수.txt',
   },
 };
 
@@ -44,6 +50,7 @@ const FALLBACK_VISUALS: BookVisuals = {
   palette: { bg: '#A07850', accent: '#F7D572', titleColor: '#FFFBF0' },
   motif: 'star',
   ribbonColor: '#8B6B45',
+  contentFile: '',
 };
 
 /**

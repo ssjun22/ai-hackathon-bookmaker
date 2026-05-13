@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import type { Palette } from "@/data/books";
+import type { Palette } from "@/lib/bookVisuals";
 
 interface BookSpineProps {
   title: string;

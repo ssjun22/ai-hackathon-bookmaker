@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import BookPicker from "@/components/BookPicker";
 import ChatPanel from "@/components/ChatPanel";
 import LoadingModal from "@/components/LoadingModal";
-import { books } from "@/data/books";
-import type { Book } from "@/data/books";
+import type { Book } from "@/lib/types";
 
 type Step = "pick" | "chat";
 
@@ -34,6 +33,21 @@ export default function CreatePage() {
   const [step, setStep] = useState<Step>("pick");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/books");
+        if (res.ok) {
+          const data: Book[] = await res.json();
+          setBooks(data);
+        }
+      } catch {
+        // 네트워크 에러 시 빈 배열 유지 — UI가 빈 picker를 보여줌
+      }
+    })();
+  }, []);
 
   function handleSelectBook(book: Book) {
     setSelectedBook(book);

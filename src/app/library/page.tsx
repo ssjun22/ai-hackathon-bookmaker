@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { books } from "@/data/books";
 import LibraryClient from "@/components/LibraryClient";
+import { getBookVisuals, registeredBookIds } from "@/lib/bookVisuals";
 
 // macOS(NFD)와 Linux(NFC) 한글 파일명 정규화 차이 회피용
 async function readBookContent(contentFile: string): Promise<string> {
@@ -13,15 +13,33 @@ async function readBookContent(contentFile: string): Promise<string> {
       // 다음 정규화 형태 시도
     }
   }
-  throw new Error(`Cannot read book file: ${contentFile}`);
+  return "";
 }
 
+// 정적 title/author 매핑 (books.ts 역할 대체, DB 없이도 동작)
+const BOOK_META: Record<string, { title: string; author: string }> = {
+  star:   { title: "냄새 맡은 값",        author: "전래동화" },
+  forest: { title: "소금을 만드는 맷돌",  author: "전래동화" },
+  rabbit: { title: "송아지와 바꾼 무",    author: "전래동화" },
+  brave:  { title: "소금장수와 기름장수", author: "전래동화" },
+};
+
 export default async function LibraryPage() {
-  // 각 책의 본문을 서버에서 미리 읽어 클라이언트에 전달
+  const bookIds = registeredBookIds();
   const booksWithContent = await Promise.all(
-    books.map(async (book) => {
-      const content = await readBookContent(book.contentFile);
-      return { ...book, content };
+    bookIds.map(async (id) => {
+      const visuals = getBookVisuals(id);
+      const meta = BOOK_META[id] ?? { title: id, author: "" };
+      const content = visuals.contentFile
+        ? await readBookContent(visuals.contentFile)
+        : "";
+      return {
+        id,
+        title: meta.title,
+        author: meta.author,
+        summary: "",
+        content,
+      };
     })
   );
 
@@ -30,7 +48,7 @@ export default async function LibraryPage() {
       style={{
         minHeight: "100dvh",
         backgroundColor: "var(--color-beige)",
-        paddingBottom: 100, // TabBar 높이 확보
+        paddingBottom: 100,
       }}
     >
       <LibraryClient booksWithContent={booksWithContent} />

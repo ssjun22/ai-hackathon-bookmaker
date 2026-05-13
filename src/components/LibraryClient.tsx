@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import BookSpine from "./BookSpine";
 import BookReaderModal from "./BookReaderModal";
-import type { Book } from "@/data/books";
+import type { Book } from "@/lib/types";
+import { getBookVisuals } from "@/lib/bookVisuals";
 
 interface BookWithContent extends Book {
   content: string;
@@ -95,40 +96,43 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
             scrollSnapType: "x mandatory",
           }}
         >
-          {booksWithContent.map((book) => (
-            <motion.div
-              key={book.id}
-              variants={reduceMotion ? undefined : itemVariants}
-              style={{
-                scrollSnapAlign: "start",
-                flexShrink: 0,
-                position: "relative",
-              }}
-            >
-              <BookSpine
-                title={book.title}
-                author={book.author}
-                palette={book.palette}
-                ribbonColor={book.ribbonColor}
-                layoutId={`book-spine-${book.id}`}
-                onClick={() => setSelectedBook(book)}
-              />
-              {/* 책 바닥 컨택트 섀도우 */}
-              <div
-                aria-hidden="true"
+          {booksWithContent.map((book) => {
+            const visuals = getBookVisuals(book.id);
+            return (
+              <motion.div
+                key={book.id}
+                variants={reduceMotion ? undefined : itemVariants}
                 style={{
-                  position: "absolute",
-                  left: 4,
-                  right: 4,
-                  bottom: -3,
-                  height: 8,
-                  background:
-                    "radial-gradient(ellipse at center, rgba(60,40,20,0.30) 0%, transparent 70%)",
-                  pointerEvents: "none",
+                  scrollSnapAlign: "start",
+                  flexShrink: 0,
+                  position: "relative",
                 }}
-              />
-            </motion.div>
-          ))}
+              >
+                <BookSpine
+                  title={book.title}
+                  author={book.author}
+                  palette={visuals.palette}
+                  ribbonColor={visuals.ribbonColor}
+                  layoutId={`book-spine-${book.id}`}
+                  onClick={() => setSelectedBook(book)}
+                />
+                {/* 책 바닥 컨택트 섀도우 */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 4,
+                    right: 4,
+                    bottom: -3,
+                    height: 8,
+                    background:
+                      "radial-gradient(ellipse at center, rgba(60,40,20,0.30) 0%, transparent 70%)",
+                    pointerEvents: "none",
+                  }}
+                />
+              </motion.div>
+            );
+          })}
         </motion.div>
 
         {/* 나무 선반 */}

@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import BookCover from "./BookCover";
-import type { Book } from "@/data/books";
+import type { Book } from "@/lib/types";
+import { getBookVisuals } from "@/lib/bookVisuals";
 
 interface BookPickerProps {
   books: Book[];
@@ -81,52 +83,55 @@ export default function BookPicker({ books, onSelect }: BookPickerProps) {
           maxWidth: 380,
         }}
       >
-        {books.map((book) => (
-          <motion.button
-            key={book.id}
-            variants={reduceMotion ? undefined : itemVariants}
-            onClick={() => onSelect(book)}
-            whileTap={reduceMotion ? undefined : { scale: 0.96 }}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 10,
-              padding: "16px 12px",
-              backgroundColor: "var(--color-card)",
-              borderRadius: "var(--radius-clay)",
-              boxShadow: "var(--shadow-clay-sm)",
-              border: "var(--border-clay)",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-            aria-label={`${book.title} 선택`}
-            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            {/* 책 표지 */}
-            <BookCover
-              title={book.title}
-              palette={book.palette}
-              motif={book.motif}
-              width={90}
-              height={120}
-            />
-            {/* 책 제목 */}
-            <p
-              className="font-display"
+        {books.map((book) => {
+          const visuals = getBookVisuals(book.id);
+          return (
+            <motion.button
+              key={book.id}
+              variants={reduceMotion ? undefined : itemVariants}
+              onClick={() => onSelect(book)}
+              whileTap={reduceMotion ? undefined : { scale: 0.96 }}
               style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--color-brown)",
-                textAlign: "center",
-                lineHeight: 1.35,
-                wordBreak: "keep-all",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 10,
+                padding: "16px 12px",
+                backgroundColor: "var(--color-card)",
+                borderRadius: "var(--radius-clay)",
+                boxShadow: "var(--shadow-clay-sm)",
+                border: "var(--border-clay)",
+                cursor: "pointer",
+                userSelect: "none",
               }}
+              aria-label={`${book.title} 선택`}
+              className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              {book.title}
-            </p>
-          </motion.button>
-        ))}
+              {/* 책 표지 */}
+              <BookCover
+                title={book.title}
+                palette={visuals.palette}
+                motif={visuals.motif}
+                width={90}
+                height={120}
+              />
+              {/* 책 제목 */}
+              <p
+                className="font-display"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--color-brown)",
+                  textAlign: "center",
+                  lineHeight: 1.35,
+                  wordBreak: "keep-all",
+                }}
+              >
+                {book.title}
+              </p>
+            </motion.button>
+          );
+        })}
       </motion.div>
     </div>
   );

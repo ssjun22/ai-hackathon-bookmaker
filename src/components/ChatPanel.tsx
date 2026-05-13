@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
-import type { Book } from "@/data/books";
+import type { Book } from "@/lib/types";
 
 // 책별 2~3턴 mock 시나리오
 const SCENARIOS: Record<string, string[]> = {
