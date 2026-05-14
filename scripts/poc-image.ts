@@ -88,6 +88,7 @@ async function generateReference(outDir: string): Promise<string> {
   const result = await generateText({
     model: MODEL,
     prompt,
+    maxRetries: 0,
   });
   const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
   if (!imageFile) {
@@ -111,6 +112,7 @@ async function generateScene(
   const scenePrompt = PROMPTS[scene.key];
   const result = await generateText({
     model: MODEL,
+    maxRetries: 0,
     messages: [
       {
         role: 'user',
