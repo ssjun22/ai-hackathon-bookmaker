@@ -386,6 +386,69 @@ sub-step 1과 동일 (아동 친화·저작권·실제 인물 참조 금지).
 
 ## 4. 데이터 인계 형식
 
+챗봇 에이전트가 `completed: true`를 반환할 때 이미지 에이전트 sub-step 1로 전달하는 페이로드 스키마이다.
+
+### 4-1. 인계 페이로드 JSON 스키마
+
+```ts
+{
+  book_id: string,
+
+  // 챗봇 인터뷰 전체 대화 (4턴, role + text)
+  conversation: {
+    role: 'ai' | 'user',
+    text: string
+  }[],
+
+  // seed/DB에서 조회한 책 정적 데이터
+  book_static_data: {
+    id: string,
+    title: string,
+    author?: string,
+    summary: string,
+    characters?: {
+      name: string,
+      description: string,
+      visual_guide?: string   // 캐릭터 시각 가이드 (seed.yaml 원본)
+    }[],
+    key_scenes?: {
+      idx: number,
+      text: string,
+      visual_guide?: string   // 장면 시각 가이드 (seed.yaml 원본)
+    }[]
+  }
+}
+```
+
+### 4-2. 인계 흐름 요약
+
+```
+챗봇 에이전트
+  └─ completed: true 반환
+       └─ metadata.child_preferences (자유 텍스트 요약)
+  
+이미지 에이전트 sub-step 1 호출
+  입력: { book_id, book_static_data, conversation, style_token }
+  출력: { reference_image_url }
+
+이미지 에이전트 sub-step 2 × 6회
+  입력: { book_id, page_idx, scene, conversation, reference_image_url }
+  출력: { image_url, page_idx }
+```
+
+### 4-3. 코드 불일치 메모
+
+> 구현 시 아래 불일치를 해소해야 한다. 이번 작업(명세 작성)에서는 메모만 하며 코드 수정은 후속 작업.
+
+| 불일치 항목 | 현재 코드 상태 | 필요한 변경 |
+|---|---|---|
+| `Book.characters` | `src/lib/types.ts`의 `Book` 타입에 없음 | `characters?: Character[]` 필드 추가 |
+| `Book.key_scenes` | `src/lib/types.ts`의 `Book` 타입에 없음 | `key_scenes?: KeyScene[]` 필드 추가 |
+| `Book.chatbot_persona` | `src/lib/types.ts`에 없음 | 필요 시 추가 (퀴즈 에이전트 명세 후 결정) |
+| `Character.visual_guide` | `src/lib/types.ts`에 없음 | `visual_guide?: string` 필드 추가 |
+| `scripts/seed.ts` | `characters`, `key_scenes` 미등록 | DB 시드 보강 필요 |
+| `AI_GATEWAY_API_KEY` | `.env.example`에 없음 | 환경 변수 추가 필요 |
+
 ---
 
 ## 5. 비용 가드 종합
