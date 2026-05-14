@@ -169,13 +169,218 @@
 
 ## 3. 이미지 에이전트
 
+### 개요
+
+챗봇 에이전트가 인터뷰를 완료하면 이미지 에이전트가 책 1권 분량(표지 1장 + 장면 6장 = 총 7장)의 이미지를 생성한다.  
+캐릭터 일관성을 위해 **2단계 구조**를 채택한다.
+
+| 단계 | 내용 | 호출 횟수 |
+|---|---|---|
+| sub-step 1 | 캐릭터 reference 이미지 생성 | 책당 1회 |
+| sub-step 2 | 장면 이미지 생성 | 책당 최대 6회 |
+
+### 모델 및 폴백 정책
+
+- **1차 모델**: `google/imagen-4.0-fast-generate-001`
+- **폴백 모델**: `google/gemini-3.1-flash-image-preview`
+  - Imagen 4 Fast가 reference image 입력을 지원하지 않는 것으로 확인되면 폴백 모델로 전환
+  - 폴백 여부는 구현 시 API 응답 오류(`UNSUPPORTED_OPERATION` 등)로 판정
+
 ---
 
 ### 3-1. sub-step 1: 캐릭터 reference 이미지 생성
 
+#### 역할 / 목표
+
+책 전체에서 사용할 **주인공 캐릭터의 기준 이미지**를 생성한다.  
+이후 모든 장면 이미지는 이 reference 이미지를 기반으로 동일한 외형을 유지한다.
+
+- 정면 또는 3/4 각도, 단순한 배경
+- `children_storybook_watercolor` 스타일 토큰 적용 (모든 책 동일)
+- 책당 1회만 호출
+
+#### 모델 ID + API 경로
+
+| 항목 | 값 |
+|---|---|
+| 모델 ID | `google/imagen-4.0-fast-generate-001` (폴백: `google/gemini-3.1-flash-image-preview`) |
+| API 경로 | Vercel AI Gateway |
+| 인증 | `AI_GATEWAY_API_KEY` (로컬) / OIDC 자동 (Vercel 배포) |
+
+#### System Prompt (프롬프트 빌더 LLM용)
+
+이미지 생성 모델은 system prompt 개념이 약하므로, **프롬프트 빌더 LLM**이 이미지 생성 요청 프롬프트를 조립한다.  
+아래는 프롬프트 빌더 LLM의 system prompt 풀텍스트이다.
+
+```text
+당신은 아동 동화책 삽화 프롬프트 작성 전문가입니다.
+
+목표:
+- 책의 주인공 캐릭터를 정의하는 단일 이미지 생성 프롬프트를 작성하세요.
+- 캐릭터의 외형(색상, 의상, 표정)을 구체적으로 포함하세요.
+
+이미지 스타일:
+- 스타일 토큰: children_storybook_watercolor
+- 항상 수채화 동화책 일러스트 스타일로 묘사하세요.
+- 단순하고 밝은 배경, 캐릭터 중심 구도.
+
+구도 지침:
+- 캐릭터 정면 또는 3/4 각도 클로즈업.
+- 단일 캐릭터만 포함 (배경 인물 없음).
+- 전신 또는 상반신.
+
+안전 가드레일:
+- 아동 친화 콘텐츠만 허용.
+- 폭력, 공포, 저작권 캐릭터(예: 디즈니, 마블 등) 절대 포함 금지.
+- 실제 인물 또는 특정 브랜드 참조 금지.
+
+출력:
+- 영어 이미지 생성 프롬프트 1개만 출력하세요. 설명 없이.
+```
+
+#### 입력 JSON 스키마
+
+```ts
+{
+  book_id: string,
+  book_static_data: {
+    title: string,
+    summary: string,
+    characters: {
+      name: string,
+      description: string,
+      visual_guide?: string   // seed.yaml의 캐릭터 시각 가이드
+    }[]
+  },
+  conversation: {             // 챗봇 인터뷰 전체 대화
+    role: 'ai' | 'user',
+    text: string
+  }[],
+  style_token: 'children_storybook_watercolor'  // 기본값, 고정
+}
+```
+
+#### 출력 JSON 스키마
+
+```ts
+{
+  reference_image_url: string  // 생성된 캐릭터 reference 이미지 URL
+}
+```
+
+#### 가드레일
+
+| 항목 | 내용 |
+|---|---|
+| 아동 친화 | 폭력·공포·선정적 콘텐츠 차단 |
+| 저작권 | 기존 저작권 캐릭터(디즈니, 마블 등) 참조 금지 |
+| 구도 | 단일 캐릭터만, 정면 클로즈업 권장 |
+| 스타일 | `children_storybook_watercolor` 고정 |
+
+#### 비용 가드
+
+| 항목 | 제한 |
+|---|---|
+| 호출 횟수 | 책당 1회 |
+| Imagen 4 Fast 단가 | ≈ $0.02 / 장 |
+| 책당 비용 | ≈ $0.02 |
+
+#### 종료 조건
+
+- reference 이미지 1장 생성 완료 시 `reference_image_url`을 반환하고 sub-step 2로 이동한다.
+- 생성 실패 시 1회 재시도. 2회 연속 실패 시 전체 이미지 에이전트 오류로 처리.
+
 ---
 
 ### 3-2. sub-step 2: 장면 이미지 생성
+
+#### 역할 / 목표
+
+sub-step 1의 reference 이미지를 기반으로 **장면별 일러스트**를 생성한다.  
+표지(page_idx=0) 포함 최대 6장을 순서대로 생성한다.
+
+- reference 이미지의 캐릭터 외형을 그대로 유지
+- 각 장면의 행동·배경·분위기만 변경
+- 동일한 `children_storybook_watercolor` 스타일 유지
+
+#### 모델 ID + API 경로
+
+sub-step 1과 동일 (Imagen 4 Fast, 폴백: Gemini Flash Image).
+
+#### System Prompt (프롬프트 빌더 LLM용)
+
+```text
+당신은 아동 동화책 삽화 프롬프트 작성 전문가입니다.
+
+목표:
+- 제공된 캐릭터 reference 이미지의 외형(색상, 의상, 표정 스타일)을 그대로 유지하면서
+  각 장면의 행동과 배경을 반영한 이미지 생성 프롬프트를 작성하세요.
+
+이미지 스타일:
+- 스타일 토큰: children_storybook_watercolor
+- 항상 수채화 동화책 일러스트 스타일로 묘사하세요.
+- 밝고 따뜻한 색감.
+
+장면 묘사 지침:
+- 캐릭터의 외형(머리색, 옷 색, 체형 등)은 reference 이미지와 동일하게 유지하세요.
+- 장면 텍스트(scene.text)를 기반으로 배경과 행동을 묘사하세요.
+- 아이의 선호(conversation)가 있으면 반영하세요 (예: 특정 색, 분위기).
+- visual_guide가 있으면 프롬프트에 우선 반영하세요.
+
+안전 가드레일:
+- 아동 친화 콘텐츠만 허용.
+- 폭력, 공포, 저작권 캐릭터, 실제 인물 참조 금지.
+
+출력:
+- 영어 이미지 생성 프롬프트 1개만 출력하세요. 설명 없이.
+```
+
+#### 입력 JSON 스키마
+
+```ts
+{
+  book_id: string,
+  page_idx: number,           // 0..5 (0 = 표지 또는 첫 장면)
+  scene: {
+    idx: number,
+    text: string,
+    visual_guide?: string     // seed.yaml의 장면 시각 가이드
+  },
+  conversation: {             // 챗봇 인터뷰 전체 대화 (아이 선호 반영용)
+    role: 'ai' | 'user',
+    text: string
+  }[],
+  reference_image_url: string  // sub-step 1의 출력
+}
+```
+
+#### 출력 JSON 스키마
+
+```ts
+{
+  image_url: string,           // 생성된 장면 이미지 URL
+  page_idx: number             // 입력의 page_idx 그대로 반환 (순서 확인용)
+}
+```
+
+#### 가드레일
+
+sub-step 1과 동일 (아동 친화·저작권·실제 인물 참조 금지).
+
+#### 비용 가드
+
+| 항목 | 제한 |
+|---|---|
+| 호출 횟수 | 책당 최대 6회 |
+| Imagen 4 Fast 단가 | ≈ $0.02 / 장 |
+| 책당 비용 | ≈ $0.12 |
+| 재시도 | 페이지별 1회 재시도 허용 |
+
+#### 종료 조건
+
+- 6개 page_idx에 대해 모두 `image_url`을 받으면 이미지 에이전트 완료.
+- 개별 페이지 실패 시 해당 페이지 1회 재시도.
+- 재시도 후에도 실패 시 해당 페이지는 fallback(빈칸 또는 플레이스홀더)으로 처리하고 나머지 페이지 생성을 계속한다.
 
 ---
 
