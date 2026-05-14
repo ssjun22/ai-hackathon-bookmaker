@@ -188,39 +188,6 @@ export default function CarouselCard({
             </div>
           )}
 
-          {isActive && !isThisEditing && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleEdit(pageIndex);
-              }}
-              disabled={isThisRegen}
-              aria-label="이 페이지 편집하기"
-              className="edit-toggle-btn"
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                padding: "6px 12px",
-                borderRadius: 16,
-                border: "1.5px solid var(--color-brown)",
-                backgroundColor: "var(--color-card)",
-                color: "var(--color-brown)",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: isThisRegen ? "not-allowed" : "pointer",
-                lineHeight: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "var(--shadow-clay-sm)",
-                zIndex: 5,
-              }}
-            >
-              내가 써볼래!
-            </button>
-          )}
         </div>
 
         {/* 텍스트 영역 */}

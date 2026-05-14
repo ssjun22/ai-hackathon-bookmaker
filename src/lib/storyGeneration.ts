@@ -8,6 +8,12 @@ import { bookCharacters } from "@/lib/db/schema";
 import { uploadBookImage } from "@/lib/supabaseStorage";
 import type { ChatAnswer } from "@/lib/types";
 
+// @ai-sdk/google 은 GOOGLE_GENERATIVE_AI_API_KEY 를 읽음.
+// .env.local 에 GOOGLE_API_KEY 만 있는 경우 자동 매핑.
+if (process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_API_KEY;
+}
+
 // ── 타입 ──────────────────────────────────────────────────────────────────────
 
 export type Scene = {
@@ -356,6 +362,7 @@ export async function generateCoverImage(
     `동화 제목: ${storyTitle}`,
     `줄거리 분위기: ${storySummary}`,
     "위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지해주세요. 따뜻하고 밝은 표지 구도.",
+    `제목 텍스트 배치: 한국어로 "${storyTitle}" 제목을 이미지 상단(top)에 가로 중앙정렬(horizontally centered)로 크고 또렷하게 표기하세요. 제목은 캐릭터·배경과 겹치지 않게 상단 여백 안에 배치하고, 가독성 좋은 동화책 표지 서체로 표현해주세요. 다른 텍스트는 넣지 마세요.`,
   ].join("\n");
 
   return callImageModel(coverPrompt, refBuffers, "표지");

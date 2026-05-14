@@ -36,13 +36,11 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
     { id: "forest-7", type: "free", question: "욕심 부린 선장에게 한마디 해준다면 어떻게 말하고 싶나요?", choices: [] },
   ],
   rabbit: [
-    { id: "rabbit-1", type: "choice", question: "토끼는 왜 길을 떠났을까?", choices: ["친구를 찾으러", "늦어서 서둘러 가다가"] },
-    { id: "rabbit-2", type: "choice", question: "욕심 많은 부자는 왜 소를 가져왔을까요?", choices: ["더 좋은 것을 받으려고", "원님이 좋아서"] },
-    { id: "rabbit-3", type: "choice", question: "부자가 무를 받았을 때 어떤 기분이었을까요?", choices: ["황당했을 것 같아요", "행복했을 것 같아요"] },
-    { id: "rabbit-4", type: "choice", question: "농부의 행동에서 느낀 점은?", choices: ["진심이 통한다", "욕심이 나쁘다"] },
-    { id: "rabbit-5", type: "choice", question: "가장 인상 깊었던 장면은?", choices: ["무를 드리는 장면", "소를 가져오는 장면"] },
-    { id: "rabbit-6", type: "choice", question: "이 이야기를 친구에게 한 마디로 소개한다면?", choices: ["욕심은 금물!", "진심은 통한다"] },
-    { id: "rabbit-7", type: "free", question: "농부에게 짧은 편지를 쓴다면 어떤 말을 적고 싶나요?", choices: [] },
+    { id: "rabbit-1", type: "choice", question: "착한 농부가 커다란 무를 사또에게 선물하자 사또가 보답으로 준 것은?", choices: ["쌀", "닭", "송아지"] },
+    { id: "rabbit-2", type: "choice", question: "욕심쟁이 농부가 송아지를 사또에게 선물하자 사또가 보답으로 준 것은?", choices: ["커다란 무", "금덩어리", "비단옷"] },
+    { id: "rabbit-3", type: "free", question: "사또는 그것을 농부에게 주면서 어떤 생각을 했을까?", choices: [] },
+    { id: "rabbit-4", type: "free", question: "욕심쟁이 농부는 사또에게 선물을 받고 어떤 표정을 지었을까?", choices: [] },
+    { id: "rabbit-5", type: "free", question: "네가 욕심쟁이 농부라면 사또에게 받은 무를 누구에게 나누어 주고 싶어?", choices: [] },
   ],
   brave: [
     { id: "brave-1", type: "choice", question: "두 사람이 다리 위에서 마주쳤을 때 어떤 기분이었을까요?", choices: ["난처했을 것 같아요", "화가 났을 것 같아요"] },
@@ -66,7 +64,8 @@ const DEFAULT_QUIZ: QuizQuestion[] = [
 const OPTION_COLORS = [
   { bg: "#FDF2C4", border: "#F5E194", number: "#3D2E1E" }, // 1: 노랑
   { bg: "#E1F2D5", border: "#BFE0A8", number: "#3D2E1E" }, // 2: 초록
-  { bg: "#FBE0DE", border: "#F4C7C3", number: "#3D2E1E" }, // 3: 핑크 (free input)
+  { bg: "#D5E8F5", border: "#A8C8E0", number: "#3D2E1E" }, // 3: 파랑 (객관식 3번째)
+  { bg: "#FBE0DE", border: "#F4C7C3", number: "#3D2E1E" }, // 4: 핑크 (free input)
 ];
 
 interface ChatPanelProps {
@@ -101,8 +100,9 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
 
   const current = quizzes[currentIndex];
   const isLast = currentIndex === quizzes.length - 1;
-  const visibleChoices = current.type === "choice" ? current.choices.slice(0, 2) : [];
+  const visibleChoices = current.type === "choice" ? current.choices.slice(0, 3) : [];
   const freeOptionIndex = visibleChoices.length;
+  const freeColor = OPTION_COLORS[freeOptionIndex] ?? OPTION_COLORS[OPTION_COLORS.length - 1];
   const isFreeSelected = selectedChoice === freeOptionIndex;
 
   const canProceed =
@@ -533,10 +533,10 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                 borderRadius: 16,
                 backgroundColor: "var(--color-card)",
                 border: isFreeSelected
-                  ? `2px solid ${OPTION_COLORS[2].border}`
+                  ? `2px solid ${freeColor.border}`
                   : "1.5px solid rgba(120,90,50,0.20)",
                 boxShadow: isFreeSelected
-                  ? `0 2px 8px rgba(60,40,20,0.12), inset 0 0 0 1px ${OPTION_COLORS[2].border}`
+                  ? `0 2px 8px rgba(60,40,20,0.12), inset 0 0 0 1px ${freeColor.border}`
                   : "none",
               }}
             >
@@ -546,8 +546,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  backgroundColor: OPTION_COLORS[2].bg,
-                  color: OPTION_COLORS[2].number,
+                  backgroundColor: freeColor.bg,
+                  color: freeColor.number,
                   fontSize: 16,
                   fontWeight: 700,
                 }}
