@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import BookCover from "./BookCover";
 import type { Book } from "@/lib/types";
-import { getBookVisuals } from "@/lib/bookVisuals";
 
 interface BookPickerProps {
   books: Book[];
@@ -14,15 +12,14 @@ interface BookPickerProps {
 
 const containerVariants: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.18 } },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 14 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: { type: "spring", stiffness: 280, damping: 24 },
   },
 };
@@ -40,37 +37,41 @@ export default function BookPicker({ books, onSelect }: BookPickerProps) {
         padding: "24px 16px 32px",
       }}
     >
-      {/* 상단 카피 */}
+      {/* 펼친 책 이미지 — 중앙 */}
       <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        style={{ textAlign: "center", marginBottom: 28 }}
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.92, y: -8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 220, damping: 22 }}
+        style={{ marginBottom: 14 }}
       >
-        <h2
-          className="font-display"
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: "var(--color-brown)",
-            lineHeight: 1.3,
-          }}
-        >
-          생각 만들기
-        </h2>
-        <p
-          style={{
-            fontSize: 14,
-            color: "var(--color-brown-soft)",
-            marginTop: 6,
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          이미 읽은 책 중에서 골라보세요
-        </p>
+        <Image
+          src="/ui/openbook.png"
+          alt="펼친 책"
+          width={240}
+          height={196}
+          style={{ width: 240, height: "auto", display: "block" }}
+          priority
+        />
       </motion.div>
 
-      {/* 2×2 그리드 */}
+      {/* 안내 문구 */}
+      <motion.p
+        initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        style={{
+          fontSize: 17,
+          color: "var(--color-brown-soft)",
+          textAlign: "center",
+          marginBottom: 22,
+          fontFamily: "var(--font-body)",
+          fontWeight: 600,
+        }}
+      >
+        이미 읽은 책 중에서 골라보세요
+      </motion.p>
+
+      {/* 책 제목 버튼 — 2×2 그리드 */}
       <motion.div
         variants={reduceMotion ? undefined : containerVariants}
         initial={reduceMotion ? false : "hidden"}
@@ -78,60 +79,48 @@ export default function BookPicker({ books, onSelect }: BookPickerProps) {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: 16,
+          gap: 12,
           width: "100%",
           maxWidth: 380,
         }}
       >
-        {books.map((book) => {
-          const visuals = getBookVisuals(book.id);
-          return (
-            <motion.button
-              key={book.id}
-              variants={reduceMotion ? undefined : itemVariants}
-              onClick={() => onSelect(book)}
-              whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+        {books.map((book) => (
+          <motion.button
+            key={book.id}
+            variants={reduceMotion ? undefined : itemVariants}
+            onClick={() => onSelect(book)}
+            whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            aria-label={`${book.title} 선택`}
+            className="font-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              padding: "20px 14px",
+              backgroundColor: "var(--color-card)",
+              borderRadius: "var(--radius-clay-sm)",
+              boxShadow: "var(--shadow-clay-sm)",
+              border: "var(--border-clay)",
+              cursor: "pointer",
+              userSelect: "none",
+              minHeight: 80,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <span
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 10,
-                padding: "16px 12px",
-                backgroundColor: "var(--color-card)",
-                borderRadius: "var(--radius-clay)",
-                boxShadow: "var(--shadow-clay-sm)",
-                border: "var(--border-clay)",
-                cursor: "pointer",
-                userSelect: "none",
+                fontSize: 17,
+                fontWeight: 700,
+                color: "var(--color-brown)",
+                lineHeight: 1.35,
+                wordBreak: "keep-all",
               }}
-              aria-label={`${book.title} 선택`}
-              className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              {/* 책 표지 */}
-              <BookCover
-                title={book.title}
-                palette={visuals.palette}
-                motif={visuals.motif}
-                width={90}
-                height={120}
-              />
-              {/* 책 제목 */}
-              <p
-                className="font-display"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "var(--color-brown)",
-                  textAlign: "center",
-                  lineHeight: 1.35,
-                  wordBreak: "keep-all",
-                }}
-              >
-                {book.title}
-              </p>
-            </motion.button>
-          );
-        })}
+              {book.title}
+            </span>
+          </motion.button>
+        ))}
       </motion.div>
     </div>
   );

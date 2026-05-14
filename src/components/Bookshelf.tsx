@@ -157,7 +157,7 @@ function CreateSlot({ reduceMotion }: { reduceMotion: boolean | null }) {
           <p
             className="font-display"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 700,
               color: "var(--color-brown-soft)",
               textAlign: "center",
@@ -201,9 +201,7 @@ export default function Bookshelf() {
         style={{
           backgroundColor: "var(--color-beige-soft)",
           borderRadius: "var(--radius-clay)",
-          boxShadow: "var(--shadow-clay-sm)",
-          border: "var(--border-clay)",
-          padding: "22px 0 0",
+          padding: "22px 0",
           position: "relative",
           overflow: "hidden",
         }}
@@ -217,23 +215,24 @@ export default function Bookshelf() {
             className="font-display focus-visible:outline-none"
             style={{
               color: "var(--color-brown)",
-              fontSize: 18,
+              fontSize: 22,
               lineHeight: 1.2,
               fontWeight: 700,
               textDecoration: "none",
             }}
           >
-            <h2 style={{ margin: 0 }}>내 서재</h2>
+            <h2 style={{ margin: 0 }}>내가 만든 책</h2>
           </Link>
           <Link
             href="/my-library"
-            className="text-xs focus-visible:outline-none"
+            className="focus-visible:outline-none"
             style={{
               color: "var(--color-brown-soft)",
               padding: "8px 12px",
               marginRight: -12,
               minHeight: 32,
               fontWeight: 600,
+              fontSize: 14,
               lineHeight: 1.2,
               textDecoration: "none",
               display: "inline-block",
@@ -269,41 +268,6 @@ export default function Bookshelf() {
             <CreateSlot reduceMotion={reduceMotion} />
           </motion.div>
 
-          {mounted && books.length === 0 && (
-            <p
-              style={{
-                marginTop: 12,
-                paddingLeft: 24,
-                paddingRight: 24,
-                fontSize: 12,
-                color: "var(--color-brown-soft)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              아직 만든 책이 없어요. 첫 번째 동화책을 만들어 보세요!
-            </p>
-          )}
-
-          <div
-            aria-hidden="true"
-            style={{
-              position: "relative",
-              height: 14,
-              marginTop: 16,
-              background:
-                "linear-gradient(to bottom, #C49563 0%, #A87B4B 45%, #8C6238 100%)",
-              boxShadow:
-                "0 3px 6px rgba(60,40,20,0.20), inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -2px 3px rgba(60,40,20,0.18)",
-            }}
-          />
-          <div
-            aria-hidden="true"
-            style={{
-              height: 18,
-              background:
-                "linear-gradient(to bottom, rgba(60,40,20,0.10) 0%, rgba(60,40,20,0) 100%)",
-            }}
-          />
         </div>
       </div>
     </section>

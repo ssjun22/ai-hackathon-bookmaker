@@ -1,11 +1,14 @@
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDbConfigured } from '@/lib/db';
 import { books } from '@/lib/db/schema';
 import { asc } from 'drizzle-orm';
 
 export async function GET() {
+  if (!isDbConfigured()) {
+    return NextResponse.json([]);
+  }
   try {
     const rows = await db.select().from(books).orderBy(asc(books.createdAt));
     return NextResponse.json(rows);

@@ -17,6 +17,12 @@ export type BookVisuals = {
   ribbonColor: string;
   /** public/books/ 아래 파일명 (한글 포함). library 페이지 본문 로딩용. */
   contentFile: string;
+  /** library 페이지에서 책등으로 표시할 이미지 (public 기준 경로) */
+  spineImage: string;
+  /** 책 모달 상단에 표시할 대표 이미지 (선택). public 기준 경로. */
+  bannerImage?: string;
+  /** 책 읽어주기 녹음 파일 (선택). 있으면 TTS 대신 재생. public 기준 경로. */
+  audioFile?: string;
 };
 
 const BOOK_VISUALS: Record<string, BookVisuals> = {
@@ -25,24 +31,33 @@ const BOOK_VISUALS: Record<string, BookVisuals> = {
     motif: 'star',
     ribbonColor: '#D85F4A',
     contentFile: '냄새 맡은 값.txt',
+    spineImage: '/ui/story1.png',
+    bannerImage: '/ui/story1_img.png',
   },
   forest: {
     palette: { bg: '#7FA84B', accent: '#3D2E1E', titleColor: '#FFFBF0' },
     motif: 'forest',
     ribbonColor: '#E8A838',
     contentFile: '소금을 만드는 맷돌.txt',
+    spineImage: '/ui/story2.png',
+    bannerImage: '/ui/story2_img.png',
   },
   rabbit: {
     palette: { bg: '#EC9CAE', accent: '#FFFFFF', titleColor: '#3D2E1E' },
     motif: 'rabbit',
     ribbonColor: '#7CB5E0',
     contentFile: '송아지와 바꾼 무.txt',
+    spineImage: '/ui/story3.png',
+    bannerImage: '/ui/story3_img.png',
+    audioFile: '/story3.wav',
   },
   brave: {
     palette: { bg: '#D9BC3E', accent: '#5C8240', titleColor: '#3D2E1E' },
     motif: 'carrot',
     ribbonColor: '#95C566',
     contentFile: '소금장수와 기름장수.txt',
+    spineImage: '/ui/story4.png',
+    bannerImage: '/ui/story4_img.png',
   },
 };
 
@@ -51,6 +66,7 @@ const FALLBACK_VISUALS: BookVisuals = {
   motif: 'star',
   ribbonColor: '#8B6B45',
   contentFile: '',
+  spineImage: '/ui/story1.png',
 };
 
 /**

@@ -18,7 +18,7 @@
 
 @theme inline {
   /* 컬러 팔레트 — 페이지 베이지를 bg.png 디오라마 톤에 맞춤 */
-  --color-beige: #F4D5A3;
+  --color-beige: #FBE8CD;
   --color-beige-soft: #FDF6E1;
   --color-green: #95C566;
   --color-green-deep: #76B048;
@@ -34,8 +34,8 @@
   --radius-clay: 24px;
   --radius-clay-sm: 18px;
 
-  /* 폰트 변수 — 헤딩은 강원교육모두체 Bold, 본문은 Gowun Dodum */
-  --font-display: 'GangwonEdu', var(--font-gowun), var(--font-pretendard), system-ui;
+  /* 폰트 변수 — 학교안심 폰트 일원화 */
+  --font-display: var(--font-gowun), var(--font-pretendard), system-ui;
   --font-body: var(--font-gowun), var(--font-pretendard), -apple-system, sans-serif;
 
   /* deprecated (claymorphism으로 교체됨) */
