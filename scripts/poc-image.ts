@@ -21,9 +21,9 @@ import { CONVERSATION } from './conversation';
 // Google AI Studio 직접 호출 (Vercel AI Gateway 우회, 무료 티어 사용)
 const MODEL = google('gemini-3.1-flash-image-preview');
 
-// 해상도·비율 — 비용 최소화를 위해 512p (1K 대비 약 50% 절감)
-// 옵션: '512p' | '1K' | '2K' | '4K'  (Nano Banana 2)
-const IMAGE_SIZE: '512p' | '1K' | '2K' | '4K' = '512p';
+// 해상도·비율 — 비용 최소화를 위해 512 (1K 대비 약 50% 절감)
+// 옵션: '512' | '1K' | '2K' | '4K'  (Nano Banana 2)
+const IMAGE_SIZE: '512' | '1K' | '2K' | '4K' = '512';
 const ASPECT_RATIO = '2:3'; // 1:1.5 와 동일 (세로형 책 일러스트)
 
 const PROMPTS = {
