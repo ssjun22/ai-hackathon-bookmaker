@@ -57,8 +57,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 1,
         title: '표지',
         body: '어느 날 밤, 구수한 냄새가 바람을 타고 골목을 가득 채웠어요. 그 냄새의 주인공은 과연 누구일까요?',
-        colorPalette: '#3B5C8F',
-        emoji: '🌙',
         bodyCandidates: [
           '어느 날 밤, 구수한 냄새가 바람을 타고 골목을 가득 채웠어요. 그 냄새의 주인공은 과연 누구일까요?',
           '별이 쏟아지는 밤, 배고픈 나그네의 코끝에 구수한 냄새가 스쳐 지나갔어요.',
@@ -70,8 +68,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 2,
         title: '냄새를 맡다',
         body: '가난한 나그네는 밥집 앞을 지나며 구수한 냄새를 힘껏 들이마셨어요. 배가 든든해진 기분이었지요.',
-        colorPalette: '#4A6FA0',
-        emoji: '👃',
         bodyCandidates: [
           '가난한 나그네는 밥집 앞을 지나며 구수한 냄새를 힘껏 들이마셨어요. 배가 든든해진 기분이었지요.',
           '배고픈 나그네는 밥집 앞에 멈춰 섰어요. 돈이 없었지만 냄새만으로도 힘이 났어요.',
@@ -83,8 +79,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 3,
         title: '값을 달라!',
         body: '밥집 주인은 소리쳤어요. \'냄새 맡은 값을 내시오!\' 나그네는 깜짝 놀라 아무 말도 하지 못했어요.',
-        colorPalette: '#5A3E2B',
-        emoji: '💬',
         bodyCandidates: [
           '밥집 주인은 소리쳤어요. \'냄새 맡은 값을 내시오!\' 나그네는 깜짝 놀라 아무 말도 하지 못했어요.',
           '\'잠깐!\' 주인이 달려나왔어요. \'내 밥 냄새를 공짜로 맡고 가면 안 되지요!\'',
@@ -96,8 +90,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 4,
         title: '현명한 판결',
         body: '지혜로운 원님이 나서서 말했어요. \'냄새 값은 돈 소리로 내면 되오.\' 짤랑짤랑, 동전 소리가 울렸어요.',
-        colorPalette: '#F7D572',
-        emoji: '⚖️',
         bodyCandidates: [
           '지혜로운 원님이 나서서 말했어요. \'냄새 값은 돈 소리로 내면 되오.\' 짤랑짤랑, 동전 소리가 울렸어요.',
           '원님이 빙그레 웃으며 말했어요. \'냄새는 소리로 갚으면 되지요. 들으셨소? 이것으로 충분하오.\'',
@@ -109,8 +101,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 5,
         title: '깨달음',
         body: '욕심쟁이 주인은 고개를 숙였어요. 진짜 소중한 것은 눈에 보이지 않을 수도 있답니다.',
-        colorPalette: '#D4A843',
-        emoji: '💡',
         bodyCandidates: [
           '욕심쟁이 주인은 고개를 숙였어요. 진짜 소중한 것은 눈에 보이지 않을 수도 있답니다.',
           '주인의 얼굴이 빨개졌어요. 욕심이 얼마나 우스운 것인지 깨달았거든요.',
@@ -122,8 +112,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 6,
         title: '결말',
         body: '그날 이후 밥집 앞을 지나는 나그네들은 모두 행복한 웃음을 지었어요. 냄새는 모두를 위한 것이었으니까요.',
-        colorPalette: '#2E4A70',
-        emoji: '😊',
         bodyCandidates: [
           '그날 이후 밥집 앞을 지나는 나그네들은 모두 행복한 웃음을 지었어요. 냄새는 모두를 위한 것이었으니까요.',
           '욕심쟁이 주인은 그날부터 마음씨 좋은 사람이 되었어요. 냄새는 여전히 골목을 가득 채웠답니다.',
@@ -141,8 +129,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 1,
         title: '표지',
         body: '깊은 바닷속 어딘가에, 지금도 쉬지 않고 소금을 만들어 내는 마법의 맷돌이 있다고 해요.',
-        colorPalette: '#7FA84B',
-        emoji: '🌊',
         bodyCandidates: [
           '깊은 바닷속 어딘가에, 지금도 쉬지 않고 소금을 만들어 내는 마법의 맷돌이 있다고 해요.',
           '바다가 짠 이유를 아시나요? 아주 오래된 마법 맷돌 이야기를 들어보세요.',
@@ -154,8 +140,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 2,
         title: '신기한 선물',
         body: '착한 형은 요정에게 마법 맷돌을 선물 받았어요. \'소금 나와라!\' 하면 소금이, \'그만!\' 하면 멈춘대요.',
-        colorPalette: '#8DC55A',
-        emoji: '🎁',
         bodyCandidates: [
           '착한 형은 요정에게 마법 맷돌을 선물 받았어요. \'소금 나와라!\' 하면 소금이, \'그만!\' 하면 멈춘대요.',
           '요정이 나타나 말했어요. \'착한 마음에 선물을 드리죠. 이 맷돌은 말을 들어요.\'',
@@ -167,8 +151,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 3,
         title: '욕심쟁이 선장',
         body: '탐욕스러운 선장이 맷돌을 훔쳐 배에 올랐어요. \'소금 나와라!\' 소금이 쏟아지기 시작했어요.',
-        colorPalette: '#3D6B2E',
-        emoji: '⚓',
         bodyCandidates: [
           '탐욕스러운 선장이 맷돌을 훔쳐 배에 올랐어요. \'소금 나와라!\' 소금이 쏟아지기 시작했어요.',
           '선장은 눈이 번쩍 뜨였어요. 소금 장사로 큰돈을 벌 수 있겠다 싶었거든요. 맷돌을 몰래 들고 도망쳤어요.',
@@ -180,8 +162,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 4,
         title: '멈출 수 없어',
         body: '\'그만!\'이라는 말을 몰랐던 선장. 소금은 점점 쌓여 배가 기울기 시작했어요.',
-        colorPalette: '#5A4A3A',
-        emoji: '😱',
         bodyCandidates: [
           '\'그만!\'이라는 말을 몰랐던 선장. 소금은 점점 쌓여 배가 기울기 시작했어요.',
           '선장은 소리쳤어요. \'멈춰!\' 하지만 맷돌은 듣지 않았어요. 마법의 주문을 몰랐거든요.',
@@ -193,8 +173,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 5,
         title: '바닷속으로',
         body: '배는 결국 소금 무게를 이기지 못하고 바닷속으로 가라앉았어요. 맷돌도 함께요.',
-        colorPalette: '#2A5A8C',
-        emoji: '🌊',
         bodyCandidates: [
           '배는 결국 소금 무게를 이기지 못하고 바닷속으로 가라앉았어요. 맷돌도 함께요.',
           '쿵, 배가 기울었어요. 선장과 소금과 맷돌이 모두 바닷속으로 사라졌어요.',
@@ -206,8 +184,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 6,
         title: '결말',
         body: '그래서 오늘도 바다는 짜다고 해요. 욕심은 결국 자신을 가라앉히고 마니까요.',
-        colorPalette: '#7FA84B',
-        emoji: '🌿',
         bodyCandidates: [
           '그래서 오늘도 바다는 짜다고 해요. 욕심은 결국 자신을 가라앉히고 마니까요.',
           '맷돌은 지금도 바닷속에서 돌고 있어요. 그래서 바다가 짠 거랍니다. 욕심의 결과예요.',
@@ -225,8 +201,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 1,
         title: '표지',
         body: '조그마한 무 하나로 시작한 교환이 어떻게 끝날지, 우리 함께 따라가 볼까요?',
-        colorPalette: '#EC9CAE',
-        emoji: '🥕',
         bodyCandidates: [
           '조그마한 무 하나로 시작한 교환이 어떻게 끝날지, 우리 함께 따라가 볼까요?',
           '작은 무 하나가 어떻게 커다란 선물이 되었을까요? 진심이 담긴 이야기를 시작해요.',
@@ -238,8 +212,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 2,
         title: '큰 무',
         body: '농부가 커다란 무를 캤어요. 너무 크고 맛있어 보여서 원님께 선물로 드리기로 했지요.',
-        colorPalette: '#F2B3C3',
-        emoji: '🌱',
         bodyCandidates: [
           '농부가 커다란 무를 캤어요. 너무 크고 맛있어 보여서 원님께 선물로 드리기로 했지요.',
           '올해 밭에서 가장 큰 무가 나왔어요. 농부는 혼자 먹기 아까워 원님께 드리기로 했어요.',
@@ -251,8 +223,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 3,
         title: '말 한 필',
         body: '원님은 기뻐하며 말 한 필을 내려주었어요. 농부는 무 하나로 말을 얻었어요!',
-        colorPalette: '#D4849A',
-        emoji: '🐴',
         bodyCandidates: [
           '원님은 기뻐하며 말 한 필을 내려주었어요. 농부는 무 하나로 말을 얻었어요!',
           '원님은 눈이 휘둥그레졌어요. \'이렇게 훌륭한 무는 처음이오!\' 그러고는 말 한 필을 선물했어요.',
@@ -264,8 +234,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 4,
         title: '욕심쟁이 부자',
         body: '이 소식을 들은 욕심쟁이 부자는 비싼 비단을 원님께 드렸어요. \'나는 더 큰 선물을 받겠지!\'',
-        colorPalette: '#B87090',
-        emoji: '💰',
         bodyCandidates: [
           '이 소식을 들은 욕심쟁이 부자는 비싼 비단을 원님께 드렸어요. \'나는 더 큰 선물을 받겠지!\'',
           '부자는 계산했어요. \'무로 말을 얻었다면, 비단으로는 더 큰 걸 받겠지!\' 욕심이 눈을 멀게 했어요.',
@@ -277,8 +245,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 5,
         title: '무를 받다',
         body: '원님은 웃으며 말했어요. \'마침 좋은 것이 생겼소. 농부에게 받은 진귀한 무라오!\'',
-        colorPalette: '#EC9CAE',
-        emoji: '😂',
         bodyCandidates: [
           '원님은 웃으며 말했어요. \'마침 좋은 것이 생겼소. 농부에게 받은 진귀한 무라오!\'',
           '원님이 무를 내밀었어요. \'마침 드릴 것이 있소. 이 귀한 무를 받으시오.\' 부자는 할 말이 없었어요.',
@@ -290,8 +256,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 6,
         title: '결말',
         body: '진심 어린 마음이 담긴 선물이 가장 값진 것이에요. 욕심으로 드린 선물은 결국 빈손으로 돌아왔답니다.',
-        colorPalette: '#C8789A',
-        emoji: '💝',
         bodyCandidates: [
           '진심 어린 마음이 담긴 선물이 가장 값진 것이에요. 욕심으로 드린 선물은 결국 빈손으로 돌아왔답니다.',
           '농부는 기쁜 마음으로 말을 타고 집에 돌아왔어요. 진심은 언제나 보답받는답니다.',
@@ -309,8 +273,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 1,
         title: '표지',
         body: '두 장수가 좁은 다리 위에서 마주쳤어요. 한 발짝도 물러서지 않으려는 두 사람의 이야기예요.',
-        colorPalette: '#D9BC3E',
-        emoji: '🌉',
         bodyCandidates: [
           '두 장수가 좁은 다리 위에서 마주쳤어요. 한 발짝도 물러서지 않으려는 두 사람의 이야기예요.',
           '외나무다리 위에서 두 사람이 딱 마주쳤어요. 누가 먼저 양보할까요?',
@@ -322,8 +284,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 2,
         title: '만남',
         body: '소금장수와 기름장수가 외나무다리에서 딱 마주쳤어요. 둘 다 먼저 건너려 했지요.',
-        colorPalette: '#E8CC50',
-        emoji: '🤝',
         bodyCandidates: [
           '소금장수와 기름장수가 외나무다리에서 딱 마주쳤어요. 둘 다 먼저 건너려 했지요.',
           '소금장수가 다리를 반쯤 건넜을 때, 반대쪽에서 기름장수가 나타났어요.',
@@ -335,8 +295,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 3,
         title: '실랑이',
         body: '\'내가 먼저요!\' \'아니, 내가 먼저!\' 실랑이가 계속되자 지나가던 사람들이 구경하기 시작했어요.',
-        colorPalette: '#C4A030',
-        emoji: '😤',
         bodyCandidates: [
           '\'내가 먼저요!\' \'아니, 내가 먼저!\' 실랑이가 계속되자 지나가던 사람들이 구경하기 시작했어요.',
           '목소리가 높아졌어요. 구경꾼들이 모여들었어요. 하지만 두 사람은 꿈쩍도 않았어요.',
@@ -348,8 +306,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 4,
         title: '지혜',
         body: '노인이 다가와 말했어요. \'한 사람이 다리 난간에 기대면 다른 사람이 지나갈 수 있소.\'',
-        colorPalette: '#5C8240',
-        emoji: '🧓',
         bodyCandidates: [
           '노인이 다가와 말했어요. \'한 사람이 다리 난간에 기대면 다른 사람이 지나갈 수 있소.\'',
           '그때 흰 수염 노인이 나타났어요. \'싸울 필요 없소. 좁아도 방법이 있다오.\'',
@@ -361,8 +317,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 5,
         title: '양보',
         body: '소금장수가 먼저 양보했어요. 기름장수도 고마운 마음에 소금을 조금 사주었지요.',
-        colorPalette: '#7A9E5A',
-        emoji: '🙏',
         bodyCandidates: [
           '소금장수가 먼저 양보했어요. 기름장수도 고마운 마음에 소금을 조금 사주었지요.',
           '소금장수가 먼저 고개를 끄덕였어요. \'내가 비키겠소.\' 기름장수의 표정이 풀렸어요.',
@@ -374,8 +328,6 @@ const AI_STORY_PAGES: Array<typeof schema.aiStoryPages.$inferInsert> = [
         pageNumber: 6,
         title: '결말',
         body: '양보 한 번으로 둘은 단짝 친구가 되었어요. 고집보다 배려가 더 멀리 데려다 준답니다.',
-        colorPalette: '#D9BC3E',
-        emoji: '🌟',
         bodyCandidates: [
           '양보 한 번으로 둘은 단짝 친구가 되었어요. 고집보다 배려가 더 멀리 데려다 준답니다.',
           '그날 이후 소금장수와 기름장수는 함께 시장을 다녔어요. 양보가 우정을 만든 거예요.',
