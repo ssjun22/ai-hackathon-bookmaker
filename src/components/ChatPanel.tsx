@@ -196,6 +196,12 @@ const DEFAULT_QUIZ: QuizQuestion[] = [
   },
 ];
 
+// ── 상수 ──────────────────────────────────────────────────────────────────────
+const BORDER_DIVIDER = "1px solid rgba(120,90,50,0.10)";
+const DOT_INACTIVE_COLOR = "rgba(120,90,50,0.25)";
+const BG_GRADIENT =
+  "linear-gradient(180deg, #FDF6E1 0%, #F4D5A3 60%, #EEC98A 100%)";
+
 // ── 컴포넌트 ─────────────────────────────────────────────────────────────────
 
 interface ChatPanelProps {
@@ -216,6 +222,10 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const visuals = getBookVisuals(book.id);
   const quizzes = QUIZ_MAP[book.id] ?? DEFAULT_QUIZ;
   const bubbleText = BUBBLE_TEXT[book.id] ?? DEFAULT_BUBBLE;
+
+  // book 비주얼에서 자주 쓰는 조합을 변수로 묶음
+  const accentBg = visuals.palette.bg;
+  const accentColor = visuals.palette.titleColor ?? "#fff";
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -246,7 +256,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
       {/* ── 헤더 ── */}
       <header
         className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{ borderBottom: "1px solid rgba(120,90,50,0.10)" }}
+        style={{ borderBottom: BORDER_DIVIDER }}
       >
         {/* 뒤로가기 */}
         <button
@@ -270,8 +280,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             <span
               className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
               style={{
-                background: visuals.palette.bg,
-                color: visuals.palette.titleColor ?? "#fff",
+                background: accentBg,
+                color: accentColor,
                 boxShadow: "var(--shadow-clay-sm)",
               }}
             >
@@ -310,7 +320,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         aria-label="토끼 캐릭터 일러스트 영역"
         className="relative flex flex-col items-center justify-end flex-shrink-0 overflow-hidden"
         style={{
-          background: "linear-gradient(180deg, #FDF6E1 0%, #F4D5A3 60%, #EEC98A 100%)",
+          background: BG_GRADIENT,
           minHeight: 200,
           paddingBottom: 0,
           boxShadow: "inset 0 -4px 12px rgba(120,90,50,0.12)",
@@ -434,8 +444,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             <span
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
               style={{
-                background: visuals.palette.bg,
-                color: visuals.palette.titleColor ?? "#fff",
+                background: accentBg,
+                color: accentColor,
                 boxShadow: "var(--shadow-clay-sm)",
               }}
             >
@@ -465,11 +475,9 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                   aria-pressed={isSelected}
                   className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-[var(--radius-clay-sm)] transition-all duration-150"
                   style={{
-                    background: isSelected
-                      ? `${visuals.palette.bg}22`
-                      : "var(--color-beige-soft)",
+                    background: isSelected ? `${accentBg}22` : "var(--color-beige-soft)",
                     border: isSelected
-                      ? `2px solid ${visuals.palette.bg}`
+                      ? `2px solid ${accentBg}`
                       : "2px solid transparent",
                     boxShadow: isSelected ? "var(--shadow-clay-sm)" : "none",
                   }}
@@ -478,10 +486,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                   <span
                     className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                     style={{
-                      background: isSelected ? visuals.palette.bg : "var(--color-card)",
-                      color: isSelected
-                        ? (visuals.palette.titleColor ?? "#fff")
-                        : "var(--color-brown-soft)",
+                      background: isSelected ? accentBg : "var(--color-card)",
+                      color: isSelected ? accentColor : "var(--color-brown-soft)",
                       boxShadow: "var(--shadow-clay-sm)",
                       transition: "background 0.15s, color 0.15s",
                     }}
@@ -509,7 +515,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         className="flex items-center justify-between px-4 py-3 flex-shrink-0"
         style={{
           background: "var(--color-beige-soft)",
-          borderTop: "1px solid rgba(120,90,50,0.10)",
+          borderTop: BORDER_DIVIDER,
         }}
       >
         {/* 깃발 + 진행 점 */}
@@ -524,9 +530,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                   width: idx === currentIndex ? 10 : 7,
                   height: idx === currentIndex ? 10 : 7,
                   background:
-                    idx === currentIndex
-                      ? visuals.palette.bg
-                      : "rgba(120,90,50,0.25)",
+                    idx === currentIndex ? accentBg : DOT_INACTIVE_COLOR,
                   display: "inline-block",
                 }}
               />
@@ -541,11 +545,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           className="px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-150"
           style={{
             background:
-              selectedChoice !== null ? visuals.palette.bg : "var(--color-card)",
-            color:
-              selectedChoice !== null
-                ? (visuals.palette.titleColor ?? "#fff")
-                : "var(--color-brown-soft)",
+              selectedChoice !== null ? accentBg : "var(--color-card)",
+            color: selectedChoice !== null ? accentColor : "var(--color-brown-soft)",
             boxShadow:
               selectedChoice !== null
                 ? "var(--shadow-clay)"
