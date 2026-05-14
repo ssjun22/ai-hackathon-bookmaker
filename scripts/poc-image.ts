@@ -6,11 +6,13 @@ import fs from 'node:fs';
 loadDotenv({ path: path.resolve(process.cwd(), '.env.local') });
 loadDotenv({ path: path.resolve(process.cwd(), '.env') });
 import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 
 // ---------- 사용자 편집 영역 ----------
 // 이 PROMPTS 객체의 텍스트를 자유롭게 수정해 다양한 이미지를 시도해보세요.
 
-const MODEL = 'google/gemini-3.1-flash-image-preview';
+// Google AI Studio 직접 호출 (Vercel AI Gateway 우회, 무료 티어 사용)
+const MODEL = google('gemini-3.1-flash-image-preview');
 
 const PROMPTS = {
   systemTone: '한국 전래동화 그림책 스타일. 따뜻한 수채화 느낌. 부드러운 색감. 아이가 보기 편한 일러스트. 폭력/공포 없음.',
@@ -48,10 +50,10 @@ const CONVERSATION = [
 // ---------- 환경 검증 ----------
 
 function requireEnv(): void {
-  if (!process.env.AI_GATEWAY_API_KEY) {
-    console.error('[poc-image] AI_GATEWAY_API_KEY 환경변수가 없습니다.');
-    console.error('  1) https://vercel.com/ai/api-keys 에서 키 발급');
-    console.error('  2) 프로젝트 루트 .env.local (권장) 또는 .env 에 AI_GATEWAY_API_KEY=<키> 추가');
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    console.error('[poc-image] GOOGLE_GENERATIVE_AI_API_KEY 환경변수가 없습니다.');
+    console.error('  1) https://aistudio.google.com 에서 API key 발급 (무료, 카드 등록 불필요)');
+    console.error('  2) 프로젝트 루트 .env.local (권장) 또는 .env 에 GOOGLE_GENERATIVE_AI_API_KEY=<키> 추가');
     console.error('  3) 다시 실행: pnpm tsx scripts/poc-image.ts');
     process.exit(1);
   }
