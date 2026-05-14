@@ -5,8 +5,9 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import {
   generateBookText,
-  generateReferenceImage,
+  generateCoverImage,
   generateSceneImage,
+  resolveCharacterReferences,
 } from '@/lib/storyGeneration';
 import { uploadBookImage } from '@/lib/supabaseStorage';
 import { db } from '@/lib/db';
@@ -37,47 +38,63 @@ export async function POST(request: Request) {
 
   try {
     // 1. 텍스트 생성
-    const { storyTitle, coverEmoji, colorPalette, scenes } = await generateBookText(
-      bookId,
-      answers
-    );
+    const { storyTitle, scenes } = await generateBookText(bookId, answers);
 
-    // 2. reference 이미지 생성
-    const refBuffer = await generateReferenceImage(bookId, answers);
+    // 2. 캐릭터 reference 이미지 확보 (DB 사전 준비 우선, 없으면 LLM 생성 + 업로드)
+    const { buffers: refBuffers } = await resolveCharacterReferences(bookId, answers);
 
-    // 3. scene별 이미지 생성 + 업로드 (순차 await)
+    // 3. 표지 이미지 생성 + 업로드
+    let coverImageUrl: string | undefined;
+    try {
+      const storySummary = scenes[0]?.body ?? storyTitle;
+      const coverBuffer = await generateCoverImage(storyTitle, storySummary, refBuffers);
+      coverImageUrl = await uploadBookImage(
+        coverBuffer,
+        `cover-${randomUUID()}.png`,
+        'image/png',
+      );
+    } catch (coverErr) {
+      console.error('[generate] 표지 이미지 실패:', coverErr);
+    }
+
+    // 4. scene별 이미지 생성 + 업로드 (순차 await, silent skip)
     const pages: MyBookPage[] = [];
+    let successCount = 0;
 
     for (const scene of scenes) {
       let imageUrl: string | undefined;
 
       try {
-        const sceneBuffer = await generateSceneImage(scene, refBuffer);
-        const fileName = `${randomUUID()}.png`;
+        const sceneBuffer = await generateSceneImage(scene, refBuffers);
+        const fileName = `scene-${scene.idx}-${randomUUID()}.png`;
         imageUrl = await uploadBookImage(sceneBuffer, fileName, 'image/png');
+        successCount++;
       } catch (imgErr) {
-        // 이미지 실패 시 비상안: imageUrl 없이 진행 (텍스트만 저장)
         console.error(`[generate] scene ${scene.idx} 이미지 실패:`, imgErr);
-        imageUrl = undefined;
       }
 
       pages.push({
         pageNumber: scene.idx,
         title: scene.title,
         body: scene.body,
-        colorPalette,
-        emoji: coverEmoji,
         imageUrl,
       });
     }
 
-    // 4. myBooks insert
+    // 전체 scene 이미지 실패 시 500
+    if (successCount === 0) {
+      return NextResponse.json(
+        { error: '모든 scene 이미지 생성에 실패했습니다.' },
+        { status: 500 }
+      );
+    }
+
+    // 5. myBooks insert
     const inserted = await db
       .insert(myBooks)
       .values({
         storyTitle,
-        coverEmoji,
-        colorPalette,
+        coverImageUrl,
         pages,
       })
       .returning({ id: myBooks.id });
