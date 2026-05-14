@@ -20,8 +20,6 @@ export function LibraryBookCard({
   isNew: boolean;
   onClick: () => void;
 }) {
-  const { colorPalette } = book;
-
   return (
     <motion.button
       type="button"
@@ -55,7 +53,6 @@ export function LibraryBookCard({
           width: 104,
           height: 144,
           borderRadius: "4px 10px 10px 4px",
-          background: `linear-gradient(135deg, ${colorPalette}dd 0%, ${colorPalette} 60%, ${colorPalette}aa 100%)`,
           boxShadow:
             "4px 6px 12px rgba(60,40,20,0.32), 2px 2px 4px rgba(60,40,20,0.16), inset 3px 0 4px rgba(0,0,0,0.18), inset -1px 0 3px rgba(255,255,255,0.18)",
           border: "1px solid rgba(60,40,20,0.08)",
@@ -63,14 +60,21 @@ export function LibraryBookCard({
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
+          backgroundColor: "#f1f5f9",
         }}
       >
-        <span
-          style={{ fontSize: 44, lineHeight: 1, opacity: 0.9 }}
-          aria-hidden="true"
-        >
-          {book.coverEmoji}
-        </span>
+        {book.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={book.coverImageUrl}
+            alt={`${displayTitle(book.storyTitle)} 표지`}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <span style={{ fontSize: 44, lineHeight: 1, opacity: 0.9 }} aria-hidden="true">
+            📖
+          </span>
+        )}
       </div>
 
       {/* 책 아래 그림자 */}
