@@ -1,5 +1,12 @@
 // 공용 도메인 타입 — 모든 컴포넌트·API Route에서 이 파일을 참조한다
 
+// 채팅 Q&A 답변 단위
+export type ChatAnswer = {
+  questionId: string;
+  question: string;
+  answer: string;
+};
+
 // 사용자가 만든 책의 페이지 (구 SavedPage)
 export type MyBookPage = {
   pageNumber: number;

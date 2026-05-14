@@ -7,7 +7,7 @@ import type { Variants } from "framer-motion";
 import BookPicker from "@/components/BookPicker";
 import ChatPanel from "@/components/ChatPanel";
 import LoadingModal from "@/components/LoadingModal";
-import type { Book } from "@/lib/types";
+import type { Book, ChatAnswer } from "@/lib/types";
 import { registeredBookIds } from "@/lib/bookVisuals";
 
 type Step = "pick" | "chat";
@@ -84,10 +84,11 @@ export default function CreatePage() {
     setStep("chat");
   }
 
-  function handleChatComplete() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function handleChatComplete(_answers: ChatAnswer[]) {
     if (!selectedBook) return;
     setIsLoading(true);
-    // 1.8~2.5초 가짜 대기 후 결과 페이지로 이동
+    // 1.8~2.5초 가짜 대기 후 결과 페이지로 이동 (T4에서 실제 API 호출로 교체)
     const delay = LOADING_BASE_MS + Math.random() * LOADING_JITTER_MS;
     setTimeout(() => {
       router.push(`/create/result/${selectedBook.id}`);

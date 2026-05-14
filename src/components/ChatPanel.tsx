@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Book } from "@/lib/types";
+import type { Book, ChatAnswer } from "@/lib/types";
 import { getBookVisuals } from "@/lib/bookVisuals";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
 
@@ -237,7 +237,7 @@ const BG_GRADIENT =
 
 interface ChatPanelProps {
   book: Book;
-  onComplete: () => void;
+  onComplete: (answers: ChatAnswer[]) => void;
 }
 
 const BUBBLE_TEXT: Record<string, string> = {
@@ -261,6 +261,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [freeText, setFreeText] = useState("");
+  const [answers, setAnswers] = useState<ChatAnswer[]>([]);
 
   const {
     isSupported: speechSupported,
@@ -294,8 +295,20 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
     if (!canProceed) return;
     if (isListening) stopSpeech();
     resetSpeech();
+
+    const currentAnswer: ChatAnswer = {
+      questionId: current.id,
+      question: current.question,
+      answer:
+        current.type === "choice"
+          ? current.choices[selectedChoice!]
+          : freeText.trim(),
+    };
+    const nextAnswers = [...answers, currentAnswer];
+    setAnswers(nextAnswers);
+
     if (isLast) {
-      onComplete();
+      onComplete(nextAnswers);
     } else {
       setCurrentIndex(currentIndex + 1);
       setSelectedChoice(null);
