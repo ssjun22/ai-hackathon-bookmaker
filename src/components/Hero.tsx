@@ -3,9 +3,7 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import RabbitMascot from "./RabbitMascot";
-
-// Header 높이: paddingTop(14 + safe-area) + 아바타(48) + paddingBottom(14)
-const HEADER_OFFSET = "calc(76px + env(safe-area-inset-top))";
+import RabbitSpeech from "./RabbitSpeech";
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
@@ -22,13 +20,17 @@ export default function Hero() {
       className="relative overflow-hidden"
       style={{
         backgroundColor: "var(--color-beige)",
-        aspectRatio: "1 / 1",
-        marginTop: `calc(-1 * ${HEADER_OFFSET})`,
-        marginBottom: 16,
+        height: 320,
+        marginTop: 8,
+        marginBottom: 20,
+        marginLeft: 16,
+        marginRight: 16,
+        borderRadius: "var(--radius-clay)",
+        boxShadow: "var(--shadow-clay)",
       }}
     >
-      {/* 배경 이미지 (책장·창문·식물 디오라마) — viewport 최상단부터 */}
-      <div className="absolute inset-0">
+      {/* 배경 이미지 (책장·창문·식물 디오라마) */}
+      <div className="absolute inset-0 z-0">
         <Image
           src="/toki/bg.png"
           alt="펠트 디오라마 배경"
@@ -39,11 +41,11 @@ export default function Hero() {
         />
       </div>
 
-      {/* 마스코트 오버레이 — Header 영역만큼 padding으로 밀어 원래 위치 보존 */}
+      {/* 마스코트 (중간 레이어) — bg와 bg-front 사이에서 공간감 형성 */}
       <div
         className="absolute inset-0 z-10 flex justify-center items-end"
         style={{
-          paddingTop: `calc(${HEADER_OFFSET} + 20px)`,
+          paddingTop: 20,
           paddingBottom: 0,
           paddingLeft: 12,
           paddingRight: 12,
@@ -51,6 +53,21 @@ export default function Hero() {
       >
         <RabbitMascot />
       </div>
+
+      {/* 전경 이미지 (화분·바닥선) — 토끼 위에 오버레이되어 깊이감 부여 */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        <Image
+          src="/toki/bg-front.png"
+          alt=""
+          fill
+          sizes="(max-width: 480px) 100vw, 480px"
+          className="object-cover object-center"
+          priority
+        />
+      </div>
+
+      {/* 토끼 말풍선 — 최상단 레이어 */}
+      <RabbitSpeech />
     </motion.section>
   );
 }

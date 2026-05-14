@@ -8,11 +8,28 @@ import BookPicker from "@/components/BookPicker";
 import ChatPanel from "@/components/ChatPanel";
 import LoadingModal from "@/components/LoadingModal";
 import type { Book } from "@/lib/types";
+import { registeredBookIds } from "@/lib/bookVisuals";
 
 type Step = "pick" | "chat";
 
 const LOADING_BASE_MS = 1800;
 const LOADING_JITTER_MS = 700;
+
+const STATIC_BOOK_META: Record<string, { title: string; author: string }> = {
+  star: { title: "냄새 맡은 값", author: "전래동화" },
+  forest: { title: "소금을 만드는 맷돌", author: "전래동화" },
+  rabbit: { title: "송아지와 바꾼 무", author: "전래동화" },
+  brave: { title: "소금장수와 기름장수", author: "전래동화" },
+};
+
+function buildStaticBooks(): Book[] {
+  return registeredBookIds().map((id) => ({
+    id,
+    title: STATIC_BOOK_META[id]?.title ?? id,
+    author: STATIC_BOOK_META[id]?.author ?? "",
+    summary: "",
+  }));
+}
 
 const slideVariants: Variants = {
   enterFromRight: { x: 40, opacity: 0 },
@@ -33,7 +50,18 @@ export default function CreatePage() {
   const [step, setStep] = useState<Step>("pick");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<Book[]>(() => buildStaticBooks());
+
+  // URL의 ?book=xxx 가 있으면 picker 건너뛰고 바로 chat 스텝으로 진입
+  useEffect(() => {
+    const bookId = new URLSearchParams(window.location.search).get("book");
+    if (!bookId) return;
+    const found = buildStaticBooks().find((b) => b.id === bookId);
+    if (found) {
+      setSelectedBook(found);
+      setStep("chat");
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -41,10 +69,12 @@ export default function CreatePage() {
         const res = await fetch("/api/books");
         if (res.ok) {
           const data: Book[] = await res.json();
-          setBooks(data);
+          if (data.length > 0) {
+            setBooks(data);
+          }
         }
       } catch {
-        // 네트워크 에러 시 빈 배열 유지 — UI가 빈 picker를 보여줌
+        // 네트워크 실패 시에도 static fallback 유지
       }
     })();
   }, []);

@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Gowun_Dodum } from "next/font/google";
 import { Agentation } from "agentation";
 import "./globals.css";
 import Header from "@/components/Header";
-import TabBar from "@/components/TabBar";
 
 const pretendard = localFont({
   src: "../../public/fonts/PretendardVariable.woff2",
@@ -12,9 +10,8 @@ const pretendard = localFont({
   display: "swap",
 });
 
-const gowunDodum = Gowun_Dodum({
-  weight: "400",
-  subsets: ["latin"],
+const kyoboHandwriting = localFont({
+  src: "../../public/fonts/KyoboHandwriting2025lyb.ttf",
   variable: "--font-gowun",
   display: "swap",
 });
@@ -30,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${pretendard.variable} ${gowunDodum.variable}`}>
+    <html lang="ko" className={`${pretendard.variable} ${kyoboHandwriting.variable}`}>
       <head>
         <meta
           name="viewport"
@@ -59,7 +56,6 @@ export default function RootLayout({
           </div>
           {children}
         </div>
-        <TabBar />
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>

@@ -56,9 +56,9 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
         </h1>
         <p
           style={{
-            fontSize: 13,
+            fontSize: 16,
             color: "var(--color-brown-soft)",
-            marginTop: 4,
+            marginTop: 6,
             fontFamily: "var(--font-body)",
           }}
         >
@@ -90,6 +90,7 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
             flexDirection: "row",
             alignItems: "flex-end",
             gap: 12,
+            paddingTop: 16,
             paddingLeft: 24,
             paddingRight: 24,
             paddingBottom: 0,
@@ -110,25 +111,8 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
               >
                 <BookSpine
                   title={book.title}
-                  author={book.author}
-                  palette={visuals.palette}
-                  ribbonColor={visuals.ribbonColor}
-                  layoutId={`book-spine-${book.id}`}
+                  spineImage={visuals.spineImage}
                   onClick={() => setSelectedBook(book)}
-                />
-                {/* 책 바닥 컨택트 섀도우 */}
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: "absolute",
-                    left: 4,
-                    right: 4,
-                    bottom: -3,
-                    height: 8,
-                    background:
-                      "radial-gradient(ellipse at center, rgba(60,40,20,0.30) 0%, transparent 70%)",
-                    pointerEvents: "none",
-                  }}
                 />
               </motion.div>
             );
@@ -161,11 +145,11 @@ export default function LibraryClient({ booksWithContent }: LibraryClientProps) 
       <p
         style={{
           textAlign: "center",
-          fontSize: 12,
+          fontSize: 15,
           color: "var(--color-brown-soft)",
-          marginTop: 16,
+          marginTop: 18,
           fontFamily: "var(--font-body)",
-          opacity: 0.7,
+          opacity: 0.75,
         }}
       >
         책을 클릭하면 바로 읽을 수 있어요

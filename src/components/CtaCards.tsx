@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import type { ReactNode } from "react";
-import { BookIcon, NoteIcon } from "@/components/CtaIcons";
 
 const containerVariants = {
   hidden: {},
@@ -20,21 +19,21 @@ const cardVariants = {
 const cards: {
   href: string;
   label: string;
-  icon: ReactNode;
+  image: string;
   bg: string;
   desc: string;
 }[] = [
   {
     href: "/library",
     label: "책 읽기",
-    icon: <BookIcon />,
+    image: "/ui/book.png",
     bg: "var(--color-green)",
     desc: "재미있는 이야기를 읽어요",
   },
   {
     href: "/create",
-    label: "생각 만들기",
-    icon: <NoteIcon />,
+    label: "나만의 책만들기",
+    image: "/ui/book2.png",
     bg: "var(--color-yellow)",
     desc: "내 생각으로 이야기를 만들어요",
   },
@@ -71,22 +70,36 @@ export default function CtaCards() {
                   backgroundColor: card.bg,
                   borderRadius: "var(--radius-clay)",
                   boxShadow: "var(--shadow-clay)",
-                  border: "var(--border-clay)",
                   minHeight: 168,
                   padding: "22px 14px 18px",
                   color: "var(--color-brown)",
                 }}
               >
-                <div style={{ marginBottom: 10 }}>{card.icon}</div>
+                <div
+                  style={{
+                    position: "relative",
+                    width: 84,
+                    height: 84,
+                    marginBottom: 10,
+                  }}
+                >
+                  <Image
+                    src={card.image}
+                    alt=""
+                    fill
+                    sizes="84px"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
                 <p
                   className="font-display leading-tight"
-                  style={{ fontSize: 17, marginBottom: 4, fontWeight: 700 }}
+                  style={{ fontSize: 20, marginBottom: 6, fontWeight: 700 }}
                 >
                   {card.label}
                 </p>
                 <p
-                  className="text-xs leading-snug whitespace-pre-line"
-                  style={{ color: "var(--color-brown-soft)" }}
+                  className="leading-snug whitespace-pre-line"
+                  style={{ color: "var(--color-brown-soft)", fontSize: 14 }}
                 >
                   {card.desc}
                 </p>
