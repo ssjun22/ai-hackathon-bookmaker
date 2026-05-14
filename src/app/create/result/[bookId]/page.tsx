@@ -68,7 +68,10 @@ export default function ResultPage({ params }: ResultPageProps) {
 
   // MyBookPage[] → StoryPage[] 변환 (bodyCandidates 빈 배열 주입)
   const mappedPages: StoryPage[] = data.pages.map((p) => ({
-    ...p,
+    pageNumber: p.pageNumber,
+    title: p.title,
+    body: p.body,
+    imageUrl: p.imageUrl,
     bodyCandidates: [],
   }));
 
@@ -79,7 +82,11 @@ export default function ResultPage({ params }: ResultPageProps) {
         backgroundColor: "var(--color-beige)",
       }}
     >
-      <ResultCarousel storyTitle={data.storyTitle} pages={mappedPages} />
+      <ResultCarousel
+        storyTitle={data.storyTitle}
+        pages={mappedPages}
+        coverImageUrl={data.coverImageUrl}
+      />
     </main>
   );
 }

@@ -15,8 +15,6 @@ function toStoryPages(pages: MyBookPage[]): StoryPage[] {
     pageNumber: p.pageNumber,
     title: p.title,
     body: p.body,
-    colorPalette: p.colorPalette,
-    emoji: p.emoji,
     imageUrl: p.imageUrl,
     bodyCandidates: [], // 뷰어는 읽기 전용 — 보기 후보 불필요
   }));
@@ -127,7 +125,11 @@ export default function BookViewerPage({ params }: BookViewerPageProps) {
         backgroundColor: "var(--color-beige)",
       }}
     >
-      <ResultCarousel storyTitle={book.storyTitle} pages={storyPages} />
+      <ResultCarousel
+        storyTitle={book.storyTitle}
+        pages={storyPages}
+        coverImageUrl={book.coverImageUrl}
+      />
 
       {/* 서재로 돌아가기 */}
       <div
