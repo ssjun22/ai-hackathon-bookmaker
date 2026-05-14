@@ -1,4 +1,5 @@
 // 정적 서버 컴포넌트 — framer-motion 미사용
+import FeltFilter from "@/components/FeltFilter";
 
 type Palette = {
   bg: string;
@@ -221,21 +222,7 @@ export default function BookCover({
       >
         <defs>
           {/* 펠트 노이즈 필터 — 부드럽게 */}
-          <filter id={filterId} x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.85"
-              numOctaves="2"
-              stitchTiles="stitch"
-              result="noise"
-            />
-            <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise" />
-            <feComponentTransfer in="grayNoise" result="alphaNoise">
-              <feFuncA type="linear" slope="0.35" intercept="0" />
-            </feComponentTransfer>
-            <feComposite in="alphaNoise" in2="SourceGraphic" operator="in" result="textured" />
-            <feBlend in="SourceGraphic" in2="textured" mode="multiply" />
-          </filter>
+          <FeltFilter id={filterId} tight />
           {/* 표지 음영 — 위가 밝고 아래가 어두움 (펠트의 부드러운 입체감) */}
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgba(255,255,255,0.18)" />

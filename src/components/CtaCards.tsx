@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
+import FeltFilter from "@/components/FeltFilter";
 
 const containerVariants = {
   hidden: {},
@@ -15,26 +16,6 @@ const cardVariants = {
   hidden: { y: 18, opacity: 0 },
   show: { y: 0, opacity: 1 },
 };
-
-function FeltFilter({ id }: { id: string }) {
-  return (
-    <filter id={id} x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence
-        type="fractalNoise"
-        baseFrequency="0.85"
-        numOctaves="2"
-        stitchTiles="stitch"
-        result="noise"
-      />
-      <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise" />
-      <feComponentTransfer in="grayNoise" result="alphaNoise">
-        <feFuncA type="linear" slope="0.35" intercept="0" />
-      </feComponentTransfer>
-      <feComposite in="alphaNoise" in2="SourceGraphic" operator="in" result="textured" />
-      <feBlend in="SourceGraphic" in2="textured" mode="multiply" />
-    </filter>
-  );
-}
 
 function BookIcon() {
   return (
