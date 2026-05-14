@@ -55,6 +55,12 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
       question: "이 이야기에서 배운 가장 큰 교훈은?",
       choices: ["욕심은 화를 부른다", "지혜가 힘이다", "나눔이 행복이다"],
     },
+    {
+      id: "star-7",
+      type: "free",
+      question: "이 이야기에서 가장 마음에 와닿은 장면을 자유롭게 적어볼까요?",
+      choices: [],
+    },
   ],
   // 소금을 만드는 맷돌 (forest)
   forest: [
@@ -93,6 +99,12 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
       type: "choice",
       question: "이 이야기가 전하는 메시지는?",
       choices: ["욕심은 결국 손해", "용기있게 도전하자", "친구를 소중히"],
+    },
+    {
+      id: "forest-7",
+      type: "free",
+      question: "욕심 부린 선장에게 한마디 해준다면 어떻게 말하고 싶나요?",
+      choices: [],
     },
   ],
   // 송아지와 바꾼 무 (rabbit)
@@ -133,6 +145,12 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
       question: "이 이야기를 친구에게 한 마디로 소개한다면?",
       choices: ["욕심은 금물!", "진심은 통한다", "재미있는 반전!"],
     },
+    {
+      id: "rabbit-7",
+      type: "free",
+      question: "농부에게 짧은 편지를 쓴다면 어떤 말을 적고 싶나요?",
+      choices: [],
+    },
   ],
   // 소금장수와 기름장수 (brave)
   brave: [
@@ -172,6 +190,12 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
       question: "이 이야기에서 배운 것은?",
       choices: ["양보와 배려", "빠른 판단력", "용감한 행동"],
     },
+    {
+      id: "brave-7",
+      type: "free",
+      question: "두 사람에게 들려주고 싶은 짧은 조언을 적어볼까요?",
+      choices: [],
+    },
   ],
 };
 
@@ -193,6 +217,12 @@ const DEFAULT_QUIZ: QuizQuestion[] = [
     type: "choice",
     question: "이 이야기에서 배운 것은?",
     choices: ["나눔의 소중함", "용기의 힘", "지혜의 가치"],
+  },
+  {
+    id: "default-4",
+    type: "free",
+    question: "이 책을 친구에게 소개하는 한 줄을 적어볼까요?",
+    choices: [],
   },
 ];
 
@@ -229,21 +259,27 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [freeText, setFreeText] = useState("");
 
   const current = quizzes[currentIndex];
   const isLast = currentIndex === quizzes.length - 1;
+  const canProceed =
+    current.type === "choice"
+      ? selectedChoice !== null
+      : freeText.trim().length > 0;
 
   function handleSelect(i: number) {
     setSelectedChoice(i);
   }
 
   function handleNext() {
-    if (selectedChoice === null) return;
+    if (!canProceed) return;
     if (isLast) {
       onComplete();
     } else {
       setCurrentIndex(currentIndex + 1);
       setSelectedChoice(null);
+      setFreeText("");
     }
   }
 
@@ -464,49 +500,74 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
             {current.question}
           </p>
 
-          {/* 선지 */}
-          <div className="flex flex-col gap-2" role="group" aria-label="선택지">
-            {current.choices.map((choice, idx) => {
-              const isSelected = selectedChoice === idx;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleSelect(idx)}
-                  aria-pressed={isSelected}
-                  className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-[var(--radius-clay-sm)] transition-all duration-150"
-                  style={{
-                    background: isSelected ? `${accentBg}22` : "var(--color-beige-soft)",
-                    border: isSelected
-                      ? `2px solid ${accentBg}`
-                      : "2px solid transparent",
-                    boxShadow: isSelected ? "var(--shadow-clay-sm)" : "none",
-                  }}
-                >
-                  {/* 번호 동그라미 */}
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+          {/* 답변 영역 — 객관식 또는 주관식 */}
+          {current.type === "choice" ? (
+            <div className="flex flex-col gap-2" role="group" aria-label="선택지">
+              {current.choices.map((choice, idx) => {
+                const isSelected = selectedChoice === idx;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelect(idx)}
+                    aria-pressed={isSelected}
+                    className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-[var(--radius-clay-sm)] transition-all duration-150"
                     style={{
-                      background: isSelected ? accentBg : "var(--color-card)",
-                      color: isSelected ? accentColor : "var(--color-brown-soft)",
-                      boxShadow: "var(--shadow-clay-sm)",
-                      transition: "background 0.15s, color 0.15s",
+                      background: isSelected ? `${accentBg}22` : "var(--color-beige-soft)",
+                      border: isSelected
+                        ? `2px solid ${accentBg}`
+                        : "2px solid transparent",
+                      boxShadow: isSelected ? "var(--shadow-clay-sm)" : "none",
                     }}
                   >
-                    {idx + 1}
-                  </span>
-                  <span
-                    className="text-sm font-medium"
-                    style={{
-                      color: isSelected ? "var(--color-brown)" : "var(--color-brown-soft)",
-                      transition: "color 0.15s",
-                    }}
-                  >
-                    {choice}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                    {/* 번호 동그라미 */}
+                    <span
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                      style={{
+                        background: isSelected ? accentBg : "var(--color-card)",
+                        color: isSelected ? accentColor : "var(--color-brown-soft)",
+                        boxShadow: "var(--shadow-clay-sm)",
+                        transition: "background 0.15s, color 0.15s",
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span
+                      className="text-sm font-medium"
+                      style={{
+                        color: isSelected ? "var(--color-brown)" : "var(--color-brown-soft)",
+                        transition: "color 0.15s",
+                      }}
+                    >
+                      {choice}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <textarea
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              placeholder="여기에 자유롭게 답을 적어보세요"
+              aria-label="자유 답변"
+              rows={4}
+              className="w-full px-4 py-3 rounded-[var(--radius-clay-sm)] resize-none text-sm leading-relaxed"
+              style={{
+                background: "var(--color-beige-soft)",
+                color: "var(--color-brown)",
+                border: "2px solid transparent",
+                boxShadow: "var(--shadow-clay-sm) inset",
+                fontFamily: "inherit",
+                outline: "none",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = accentBg;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "transparent";
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -541,19 +602,17 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         {/* 다음 버튼 */}
         <button
           onClick={handleNext}
-          disabled={selectedChoice === null}
+          disabled={!canProceed}
           className="px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-150"
           style={{
-            background:
-              selectedChoice !== null ? accentBg : "var(--color-card)",
-            color: selectedChoice !== null ? accentColor : "var(--color-brown-soft)",
-            boxShadow:
-              selectedChoice !== null
-                ? "var(--shadow-clay)"
-                : "var(--shadow-clay-sm)",
+            background: canProceed ? accentBg : "var(--color-card)",
+            color: canProceed ? accentColor : "var(--color-brown-soft)",
+            boxShadow: canProceed
+              ? "var(--shadow-clay)"
+              : "var(--shadow-clay-sm)",
             border: "var(--border-clay)",
-            opacity: selectedChoice === null ? 0.5 : 1,
-            cursor: selectedChoice === null ? "not-allowed" : "pointer",
+            opacity: canProceed ? 1 : 0.5,
+            cursor: canProceed ? "pointer" : "not-allowed",
           }}
         >
           {isLast ? "완료" : "다음"}
