@@ -203,10 +203,19 @@ interface ChatPanelProps {
   onComplete: () => void;
 }
 
+const BUBBLE_TEXT: Record<string, string> = {
+  star: "냄새 맡은 값… 재미있지? 🐰",
+  forest: "마법 맷돌 이야기, 어땠어? 🐰",
+  rabbit: "무랑 송아지 이야기! 🐰",
+  brave: "양보의 지혜를 느꼈니? 🐰",
+};
+const DEFAULT_BUBBLE = "정말 재미있는 이야기였지? 🐰";
+
 export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const router = useRouter();
   const visuals = getBookVisuals(book.id);
   const quizzes = QUIZ_MAP[book.id] ?? DEFAULT_QUIZ;
+  const bubbleText = BUBBLE_TEXT[book.id] ?? DEFAULT_BUBBLE;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -301,9 +310,10 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         aria-label="토끼 캐릭터 일러스트 영역"
         className="relative flex flex-col items-center justify-end flex-shrink-0 overflow-hidden"
         style={{
-          background: "linear-gradient(180deg, var(--color-beige-soft) 0%, var(--color-beige) 100%)",
+          background: "linear-gradient(180deg, #FDF6E1 0%, #F4D5A3 60%, #EEC98A 100%)",
           minHeight: 200,
           paddingBottom: 0,
+          boxShadow: "inset 0 -4px 12px rgba(120,90,50,0.12)",
         }}
       >
         {/* 인라인 SVG: 구름 */}
@@ -379,7 +389,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
               fontWeight: 500,
             }}
           >
-            정말 재미있는 이야기였지? 🐰
+            {bubbleText}
             {/* 말풍선 꼬리 (우측 아래) */}
             <span
               aria-hidden="true"
