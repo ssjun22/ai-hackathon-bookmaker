@@ -125,7 +125,10 @@ async function main() {
     scenePaths.push(await generateScene(outDir, refPath, scene));
   }
 
-  // TODO T5
+  console.log('\n[poc-image] 5장 생성 완료. tmp/ 폴더에서 확인하세요:');
+  console.log(`  - ${refPath}`);
+  scenePaths.forEach((p) => console.log(`  - ${p}`));
+  console.log('\n프롬프트는 scripts/poc-image.ts 상단 PROMPTS 객체에서 자유롭게 수정 후 재실행 가능합니다.');
 }
 
 main().catch((err) => {
