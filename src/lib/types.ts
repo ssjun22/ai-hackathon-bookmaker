@@ -12,8 +12,6 @@ export type MyBookPage = {
   pageNumber: number;
   title: string;
   body: string;
-  colorPalette: string;
-  emoji: string;
   imageUrl?: string;
 };
 
@@ -26,8 +24,7 @@ export type StoryPage = MyBookPage & {
 export type MyBook = {
   id: string;
   storyTitle: string;
-  coverEmoji: string;
-  colorPalette: string;
+  coverImageUrl?: string;
   pages: MyBookPage[];
   createdAt: string; // ISO8601
 };
