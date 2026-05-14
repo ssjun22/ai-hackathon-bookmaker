@@ -15,8 +15,6 @@ interface CarouselCardProps {
   isThisDirty: boolean;
   isThisRegen: boolean;
   displayBody: string;
-  displayPalette: string;
-  displayEmoji: string;
   cardState: EditState;
   aiCandidates: string[];
   cardRef: (el: HTMLDivElement | null) => void;
@@ -38,8 +36,6 @@ export default function CarouselCard({
   isThisDirty,
   isThisRegen,
   displayBody,
-  displayPalette,
-  displayEmoji,
   cardState,
   aiCandidates,
   cardRef,
@@ -117,13 +113,12 @@ export default function CarouselCard({
         <div style={{ position: "relative" }}>
           <div
             style={{
-              backgroundColor: displayPalette,
               aspectRatio: isThisEditing ? "3 / 2" : "3 / 4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: isThisEditing ? 72 : 96,
-              transition: "background-color 0.4s ease",
+              overflow: "hidden",
+              backgroundColor: "#f1f5f9", // bg-slate-100 fallback
             }}
             aria-hidden="true"
           >
@@ -140,8 +135,8 @@ export default function CarouselCard({
                   style={{
                     width: 36,
                     height: 36,
-                    border: "3px solid rgba(255,255,255,0.3)",
-                    borderTop: "3px solid #fff",
+                    border: "3px solid rgba(100,100,100,0.2)",
+                    borderTop: "3px solid #888",
                     borderRadius: "50%",
                     animation: "spin 0.8s linear infinite",
                   }}
@@ -149,15 +144,29 @@ export default function CarouselCard({
                 <p
                   style={{
                     fontSize: 12,
-                    color: "rgba(255,255,255,0.9)",
+                    color: "rgba(80,80,80,0.9)",
                     fontWeight: 600,
                   }}
                 >
                   이미지 재생성 중...
                 </p>
               </div>
+            ) : page.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={page.imageUrl}
+                alt={`${page.title} 장면 이미지`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
             ) : (
-              displayEmoji
+              // fallback: 단색 배경 + 책 아이콘
+              <span style={{ fontSize: isThisEditing ? 56 : 72, lineHeight: 1 }} aria-hidden="true">
+                📖
+              </span>
             )}
           </div>
 
