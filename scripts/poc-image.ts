@@ -21,6 +21,11 @@ import { CONVERSATION } from './conversation';
 // Google AI Studio 직접 호출 (Vercel AI Gateway 우회, 무료 티어 사용)
 const MODEL = google('gemini-3.1-flash-image-preview');
 
+// 해상도·비율 — 비용 최소화를 위해 512p (1K 대비 약 50% 절감)
+// 옵션: '512p' | '1K' | '2K' | '4K'  (Nano Banana 2)
+const IMAGE_SIZE: '512p' | '1K' | '2K' | '4K' = '512p';
+const ASPECT_RATIO = '1:1';
+
 const PROMPTS = {
   systemTone: '한국 전래동화 그림책 스타일. 따뜻한 수채화 느낌. 부드러운 색감. 아이가 보기 편한 일러스트. 폭력/공포 없음.',
 
@@ -98,6 +103,12 @@ async function generateReference(outDir: string): Promise<string> {
     model: MODEL,
     prompt,
     maxRetries: 0,
+    providerOptions: {
+      google: {
+        responseModalities: ['IMAGE'],
+        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
+      },
+    },
   });
   const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
   if (!imageFile) {
@@ -122,6 +133,12 @@ async function generateScene(
   const result = await generateText({
     model: MODEL,
     maxRetries: 0,
+    providerOptions: {
+      google: {
+        responseModalities: ['IMAGE'],
+        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
+      },
+    },
     messages: [
       {
         role: 'user',
