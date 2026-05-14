@@ -12,9 +12,6 @@ import { registeredBookIds } from "@/lib/bookVisuals";
 
 type Step = "pick" | "chat";
 
-const LOADING_BASE_MS = 1800;
-const LOADING_JITTER_MS = 700;
-
 const STATIC_BOOK_META: Record<string, { title: string; author: string }> = {
   star: { title: "냄새 맡은 값", author: "전래동화" },
   forest: { title: "소금을 만드는 맷돌", author: "전래동화" },
@@ -50,6 +47,7 @@ export default function CreatePage() {
   const [step, setStep] = useState<Step>("pick");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [books, setBooks] = useState<Book[]>(() => buildStaticBooks());
 
   // URL의 ?book=xxx 가 있으면 picker 건너뛰고 바로 chat 스텝으로 진입
@@ -84,15 +82,32 @@ export default function CreatePage() {
     setStep("chat");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function handleChatComplete(_answers: ChatAnswer[]) {
+  async function handleChatComplete(answers: ChatAnswer[]) {
     if (!selectedBook) return;
+    setErrorMessage(null);
     setIsLoading(true);
-    // 1.8~2.5초 가짜 대기 후 결과 페이지로 이동 (T4에서 실제 API 호출로 교체)
-    const delay = LOADING_BASE_MS + Math.random() * LOADING_JITTER_MS;
-    setTimeout(() => {
-      router.push(`/create/result/${selectedBook.id}`);
-    }, delay);
+
+    try {
+      const res = await fetch("/api/my-books/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId: selectedBook.id, answers }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          (errData as { error?: string }).error ?? `서버 오류 (${res.status})`
+        );
+      }
+
+      const data = await res.json() as { id: string };
+      router.push(`/create/result/${data.id}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했어요.";
+      setIsLoading(false);
+      setErrorMessage(message);
+    }
   }
 
   const variants = reduceMotion ? slideVariantsReduced : slideVariants;
@@ -150,6 +165,52 @@ export default function CreatePage() {
 
       {/* 로딩 모달 — z-index 61, TabBar(z-30) 위 */}
       <LoadingModal open={isLoading} />
+
+      {/* 에러 메시지 (생성 실패 시) */}
+      {errorMessage && !isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 80,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 62,
+            background: "var(--color-card)",
+            border: "1.5px solid #E57373",
+            borderRadius: "var(--radius-clay)",
+            boxShadow: "var(--shadow-clay)",
+            padding: "12px 20px",
+            maxWidth: 360,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ color: "#E57373", fontSize: 18 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: "var(--color-brown)", fontSize: 13, fontWeight: 600, margin: 0 }}>
+              책 만들기에 실패했어요
+            </p>
+            <p style={{ color: "var(--color-brown-soft)", fontSize: 12, margin: "2px 0 0" }}>
+              {errorMessage}
+            </p>
+          </div>
+          <button
+            onClick={() => setErrorMessage(null)}
+            aria-label="오류 닫기"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--color-brown-soft)",
+              fontSize: 16,
+              padding: 4,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }
