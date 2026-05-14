@@ -6,6 +6,7 @@ import type { Variants } from "framer-motion";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
 import type { Book } from "@/lib/types";
 import { getBookVisuals } from "@/lib/bookVisuals";
+import { MicPermissionBanner, ChatInputRow } from "@/components/ChatPanelParts";
 
 // 책별 2~3턴 mock 시나리오
 const SCENARIOS: Record<string, string[]> = {
@@ -196,53 +197,10 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
       </div>
 
       {/* 마이크 권한 거부 안내 배너 */}
-      <AnimatePresence>
-        {permissionDenied && (
-          <motion.div
-            key="mic-denied"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ overflow: "hidden", flexShrink: 0 }}
-          >
-            <div
-              role="alert"
-              style={{
-                backgroundColor: "#FEF3C7",
-                borderBottom: "1px solid rgba(234,179,8,0.3)",
-                padding: "10px 16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 8,
-              }}
-            >
-              <p style={{ fontSize: 12, color: "#92400E", lineHeight: 1.4 }}>
-                🎙️ 마이크를 허용하면 말로 대답할 수 있어요.
-                <br />
-                주소창 옆 자물쇠 → 마이크 허용을 눌러주세요.
-              </p>
-              <button
-                onClick={() => setPermissionDenied(false)}
-                style={{
-                  fontSize: 11,
-                  color: "#92400E",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  backgroundColor: "rgba(234,179,8,0.2)",
-                }}
-              >
-                닫기
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MicPermissionBanner
+        permissionDenied={permissionDenied}
+        onDismiss={() => setPermissionDenied(false)}
+      />
 
       {/* 메시지 목록 */}
       <div
@@ -336,124 +294,18 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
       </div>
 
       {/* 입력 행 */}
-      <div
-        style={{
-          padding: "10px 12px 16px",
-          borderTop: "1px solid rgba(120,90,50,0.10)",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        {/* 마이크 버튼 */}
-        <button
-          onClick={handleMicClick}
-          disabled={!isSupported}
-          aria-label={
-            !isSupported
-              ? "이 브라우저는 음성 입력을 지원하지 않아요"
-              : isListening
-                ? "음성 인식 중지"
-                : "말하기"
-          }
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            border: "var(--border-clay)",
-            backgroundColor: isListening
-              ? visuals.palette.bg
-              : "var(--color-card)",
-            color: isListening
-              ? visuals.palette.titleColor ?? "#fff"
-              : "var(--color-brown-soft)",
-            cursor: isSupported ? "pointer" : "not-allowed",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            opacity: isSupported ? 1 : 0.4,
-            boxShadow: "var(--shadow-clay-sm)",
-            transition: "background-color 0.2s, color 0.2s",
-          }}
-        >
-          {isListening ? (
-            // 인식 중 — 정지 아이콘
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="3" y="3" width="4" height="10" rx="1" fill="currentColor" />
-              <rect x="9" y="3" width="4" height="10" rx="1" fill="currentColor" />
-            </svg>
-          ) : (
-            // 마이크 아이콘
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="5" y="1" width="6" height="8" rx="3" fill="currentColor" />
-              <path d="M2 7C2 10.3137 4.68629 13 8 13C11.3137 13 14 10.3137 14 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="8" y1="13" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
-
-        {/* 텍스트 입력 */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={isListening ? "듣고 있어요..." : "생각을 입력해 보세요"}
-          disabled={isAiThinking}
-          style={{
-            flex: 1,
-            height: 44,
-            borderRadius: 22,
-            border: "var(--border-clay)",
-            backgroundColor: "var(--color-card)",
-            padding: "0 16px",
-            fontSize: 14,
-            color: "var(--color-brown)",
-            fontFamily: "var(--font-body)",
-            outline: "none",
-            boxShadow: "var(--shadow-clay-sm)",
-            minWidth: 0, // flex-1이 좁아지도록
-          }}
-          aria-label="대화 입력"
-        />
-
-        {/* 보내기 버튼 */}
-        <button
-          onClick={handleSend}
-          disabled={!inputValue.trim() || isAiThinking}
-          aria-label="보내기"
-          style={{
-            width: 60,
-            height: 44,
-            borderRadius: 22,
-            border: "var(--border-clay)",
-            backgroundColor:
-              inputValue.trim() && !isAiThinking
-                ? visuals.palette.bg
-                : "var(--color-card)",
-            color:
-              inputValue.trim() && !isAiThinking
-                ? visuals.palette.titleColor ?? "#fff"
-                : "var(--color-brown-soft)",
-            cursor: inputValue.trim() && !isAiThinking ? "pointer" : "not-allowed",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            opacity: inputValue.trim() && !isAiThinking ? 1 : 0.45,
-            boxShadow: "var(--shadow-clay-sm)",
-            fontSize: 13,
-            fontWeight: 600,
-            fontFamily: "var(--font-body)",
-            transition: "background-color 0.2s, color 0.2s, opacity 0.2s",
-          }}
-        >
-          전송
-        </button>
-      </div>
+      <ChatInputRow
+        inputValue={inputValue}
+        isAiThinking={isAiThinking}
+        isSupported={isSupported}
+        isListening={isListening}
+        visuals={visuals}
+        inputRef={inputRef}
+        onInputChange={setInputValue}
+        onKeyDown={handleKeyDown}
+        onSend={handleSend}
+        onMicClick={handleMicClick}
+      />
 
       {/* 타이핑 바운스 애니메이션 + focus-visible */}
       <style>{`
