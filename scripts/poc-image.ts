@@ -24,7 +24,7 @@ const MODEL = google('gemini-3.1-flash-image-preview');
 // 해상도·비율 — 비용 최소화를 위해 512p (1K 대비 약 50% 절감)
 // 옵션: '512p' | '1K' | '2K' | '4K'  (Nano Banana 2)
 const IMAGE_SIZE: '512p' | '1K' | '2K' | '4K' = '512p';
-const ASPECT_RATIO = '1:1';
+const ASPECT_RATIO = '2:3'; // 1:1.5 와 동일 (세로형 책 일러스트)
 
 const PROMPTS = {
   systemTone: '한국 전래동화 그림책 스타일. 따뜻한 수채화 느낌. 부드러운 색감. 아이가 보기 편한 일러스트. 폭력/공포 없음.',
