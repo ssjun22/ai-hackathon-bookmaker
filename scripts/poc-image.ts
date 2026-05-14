@@ -25,11 +25,6 @@ const PROMPTS = {
   systemTone: '한국 전래동화 그림책 스타일. 따뜻한 수채화 느낌. 부드러운 색감. 아이가 보기 편한 일러스트. 폭력/공포 없음.',
 
   reference: `${'한국 전래동화 그림책 스타일'} ... 둥근 인상의 농부 아저씨, 따뜻한 미소, 한복 작업복, 정면 클로즈업, 단순한 시골 배경, 핑크빛 따뜻한 톤.`,
-
-  scene1_cover: '표지. 농부 아저씨가 한 손에 큰 보라색 호박을 들고 환하게 웃는 모습. 보라색 호박은 사람 머리만 한 크기. 따뜻한 시골 들판 배경. 위쪽에 동화 제목이 들어갈 여백.',
-  scene2_giant_pumpkin: '농부 아저씨가 밭에서 자신의 키만큼 자란 거대한 보라색 호박을 보고 놀라며 기뻐하는 장면. 평화로운 시골 들판. 햇살이 부드럽게 비침.',
-  scene3_horse_gift: '원님이 농부에게 흰 말 한 필을 선물하는 장면. 한옥 마당. 농부는 두 손을 모아 감사 인사. 따뜻한 분위기.',
-  scene5_pumpkin_back: '원님이 욕심쟁이 부자에게 보라색 호박을 돌려주는 장면. 부자는 비단을 들고 와 당황한 표정. 한옥 대청. 살짝 유머러스한 분위기.',
 };
 
 // ---------- 책 정적 데이터 ----------
@@ -55,14 +50,30 @@ function requireEnv(): void {
   }
 }
 
-// ---------- 장면 배열 ----------
+// ---------- 장면 로딩 (tmp/scenes.json from poc-text.ts) ----------
 
-const SCENES = [
-  { idx: 1, key: 'scene1_cover'         as keyof typeof PROMPTS, out: '02-scene-cover.png' },
-  { idx: 2, key: 'scene2_giant_pumpkin' as keyof typeof PROMPTS, out: '03-scene-giant-pumpkin.png' },
-  { idx: 3, key: 'scene3_horse_gift'    as keyof typeof PROMPTS, out: '04-scene-horse-gift.png' },
-  { idx: 5, key: 'scene5_pumpkin_back'  as keyof typeof PROMPTS, out: '05-scene-pumpkin-back.png' },
-];
+type Scene = { idx: number; title: string; body: string };
+
+function loadScenes(): Scene[] {
+  const scenesPath = path.resolve(process.cwd(), 'tmp', 'scenes.json');
+  if (!fs.existsSync(scenesPath)) {
+    console.error('[poc-image] tmp/scenes.json 파일이 없습니다.');
+    console.error('  먼저 텍스트 생성 스크립트를 실행하세요:');
+    console.error('    pnpm tsx scripts/poc-text.ts');
+    process.exit(1);
+  }
+  const raw = fs.readFileSync(scenesPath, 'utf8');
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    throw new Error('tmp/scenes.json 루트가 배열이 아닙니다.');
+  }
+  return parsed.map((item, i) => {
+    if (typeof item?.idx !== 'number' || typeof item?.title !== 'string' || typeof item?.body !== 'string') {
+      throw new Error(`tmp/scenes.json 항목 ${i} 스키마 불일치: ${JSON.stringify(item)}`);
+    }
+    return { idx: item.idx, title: item.title, body: item.body };
+  });
+}
 
 // ---------- reference 이미지 생성 ----------
 
@@ -103,11 +114,11 @@ async function generateReference(outDir: string): Promise<string> {
 async function generateScene(
   outDir: string,
   refPath: string,
-  scene: { idx: number; key: keyof typeof PROMPTS; out: string }
+  scene: Scene
 ): Promise<string> {
-  console.log(`[poc-image] 장면 ${scene.idx} 생성 중...`);
+  console.log(`[poc-image] 장면 ${scene.idx} (${scene.title}) 생성 중...`);
   const refBuffer = fs.readFileSync(refPath);
-  const scenePrompt = PROMPTS[scene.key];
+  const sceneText = `장면 ${scene.idx} — ${scene.title}: ${scene.body}`;
   const result = await generateText({
     model: MODEL,
     maxRetries: 0,
@@ -115,7 +126,7 @@ async function generateScene(
       {
         role: 'user',
         content: [
-          { type: 'text', text: `${PROMPTS.systemTone}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${scenePrompt}` },
+          { type: 'text', text: `${PROMPTS.systemTone}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${sceneText}` },
           { type: 'image', image: refBuffer },
         ],
       },
@@ -123,9 +134,10 @@ async function generateScene(
   });
   const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
   if (!imageFile) {
-    throw new Error(`장면 ${scene.idx} 응답에 이미지가 없습니다. PROMPTS.${scene.key} 또는 reference 입력 지원 확인 필요.`);
+    throw new Error(`장면 ${scene.idx} 응답에 이미지가 없습니다. tmp/scenes.json body 수정 또는 reference 입력 지원 확인 필요.`);
   }
-  const filePath = path.join(outDir, scene.out);
+  const outName = `${String(scene.idx + 1).padStart(2, '0')}-scene-${scene.idx}.png`;
+  const filePath = path.join(outDir, outName);
   fs.writeFileSync(filePath, imageFile.uint8Array);
   console.log(`  ✓ 저장: ${filePath}`);
   return filePath;
@@ -138,16 +150,19 @@ async function main() {
   const outDir = path.resolve(process.cwd(), 'tmp');
   fs.mkdirSync(outDir, { recursive: true });
 
+  const scenes = loadScenes();
+  console.log(`[poc-image] tmp/scenes.json 로드 — 장면 ${scenes.length}개`);
+
   const refPath = await generateReference(outDir);
   const scenePaths: string[] = [];
-  for (const scene of SCENES) {
+  for (const scene of scenes) {
     scenePaths.push(await generateScene(outDir, refPath, scene));
   }
 
-  console.log('\n[poc-image] 5장 생성 완료. tmp/ 폴더에서 확인하세요:');
+  console.log(`\n[poc-image] 총 ${1 + scenePaths.length}장 생성 완료. tmp/ 폴더에서 확인하세요:`);
   console.log(`  - ${refPath}`);
   scenePaths.forEach((p) => console.log(`  - ${p}`));
-  console.log('\n프롬프트는 scripts/poc-image.ts 상단 PROMPTS 객체에서 자유롭게 수정 후 재실행 가능합니다.');
+  console.log('\n장면 본문은 scripts/poc-text.ts 재실행으로, 그림체/캐릭터는 scripts/poc-image.ts 상단 PROMPTS 수정으로 바꿀 수 있습니다.');
 }
 
 main().catch((err) => {
