@@ -455,13 +455,14 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           </p>
 
           {/* 선지 */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" role="group" aria-label="선택지">
             {current.choices.map((choice, idx) => {
               const isSelected = selectedChoice === idx;
               return (
                 <button
                   key={idx}
                   onClick={() => handleSelect(idx)}
+                  aria-pressed={isSelected}
                   className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-[var(--radius-clay-sm)] transition-all duration-150"
                   style={{
                     background: isSelected
@@ -514,7 +515,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
         {/* 깃발 + 진행 점 */}
         <div className="flex items-center gap-2">
           <span aria-hidden="true" className="text-base">🚩</span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={currentIndex + 1} aria-valuemin={1} aria-valuemax={quizzes.length} aria-label={`진행 상황: ${currentIndex + 1}/${quizzes.length}`}>
             {quizzes.map((_, idx) => (
               <span
                 key={idx}
