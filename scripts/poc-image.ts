@@ -53,6 +53,24 @@ function requireEnv(): void {
   }
 }
 
+// ---------- reference 이미지 생성 ----------
+
+async function generateReference(outDir: string): Promise<string> {
+  console.log('[poc-image] reference 이미지 생성 중...');
+  const result = await generateText({
+    model: MODEL,
+    prompt: `${PROMPTS.systemTone}\n\n${PROMPTS.reference}`,
+  });
+  const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
+  if (!imageFile) {
+    throw new Error('reference 응답에 이미지가 없습니다. PROMPTS.reference 수정 또는 모델 응답 확인 필요.');
+  }
+  const filePath = path.join(outDir, '01-reference.png');
+  fs.writeFileSync(filePath, imageFile.uint8Array);
+  console.log(`  ✓ 저장: ${filePath}`);
+  return filePath;
+}
+
 // ---------- main ----------
 
 async function main() {
@@ -60,7 +78,9 @@ async function main() {
   const outDir = path.resolve(process.cwd(), 'tmp');
   fs.mkdirSync(outDir, { recursive: true });
 
-  // TODO T3, T4
+  const refPath = await generateReference(outDir);
+
+  // TODO T4
 }
 
 main().catch((err) => {
