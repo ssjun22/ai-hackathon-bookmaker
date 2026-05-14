@@ -11,6 +11,7 @@ if (process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
 
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
+import { CONVERSATION } from './conversation';
 
 // ---------- 사용자 편집 영역 ----------
 
@@ -45,19 +46,6 @@ const BOOK = {
   author: '전래동화',
   summary: '마음씨 좋은 농부가 커다란 무를 원님께 정성껏 선물하자 원님은 기뻐하며 말 한 필을 내려줍니다. 이 소식을 들은 욕심쟁이 부자가 비단을 갖다 바쳤더니 원님은 "마침 좋은 것이 생겼소"라며 농부에게 받은 무를 돌려줍니다. 진심 어린 마음이 가장 값진 선물임을 깨닫게 해 주는 이야기',
 };
-
-// ---------- mock 대화 ----------
-
-const CONVERSATION = [
-  { role: 'ai',   text: "안녕! 오늘은 '송아지와 바꾼 무' 이야기를 다시 써볼 거야. 우리가 만들 이야기 속 농부 아저씨는 어떤 모습이면 좋겠어?" },
-  { role: 'user', text: '주인공 모습은 원래대로 바꾸지 않을게요.' },
-  { role: 'ai',   text: "좋아! 그럼 아저씨가 키울 채소는 원래 이야기에서 큰 '무'였는데, 너는 어떤 채소가 좋아?" },
-  { role: 'user', text: '행복을 부르는 보라색 호박이요!' },
-  { role: 'ai',   text: '멋져! 그럼 이 이야기의 분위기는 어떤 느낌이면 좋겠어?' },
-  { role: 'user', text: '따뜻하고 평화로운 시골 풍경이요.' },
-  { role: 'ai',   text: '마지막으로! 이 책의 마지막 장면은 어떤 느낌으로 끝나면 좋겠어?' },
-  { role: 'user', text: '결말은 앞에서 대화한 내용을 기반으로 적절히 변경해주세요. 기본은 원문을 따르고요.' },
-];
 
 // ---------- 출력 타입 ----------
 
