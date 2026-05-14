@@ -11,7 +11,6 @@ interface CardEditPanelProps {
   onUpdateCustomInput: (idx: number, value: string) => void;
   onPickCandidate: (idx: number, candidate: string) => void;
   onResetBody: (idx: number, originalBody: string) => void;
-  onToggleEdit: (idx: number) => void;
   disabled?: boolean;
 }
 
@@ -24,7 +23,6 @@ export default function CardEditPanel({
   onUpdateCustomInput,
   onPickCandidate,
   onResetBody,
-  onToggleEdit,
   disabled = false,
 }: CardEditPanelProps) {
   return (

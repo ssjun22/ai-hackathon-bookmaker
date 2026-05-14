@@ -21,6 +21,11 @@ export default function CarouselControls({
 }: CarouselControlsProps) {
   return (
     <>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
       {/* 이전 버튼 */}
       <button
         type="button"

@@ -292,7 +292,6 @@ export default function CarouselCard({
               onUpdateCustomInput={onUpdateCustomInput}
               onPickCandidate={onPickCandidate}
               onResetBody={onResetBody}
-              onToggleEdit={onToggleEdit}
               disabled={isThisRegen}
             />
           ) : (
