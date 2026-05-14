@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Book } from "@/lib/types";
-import { getBookVisuals } from "@/lib/bookVisuals";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
 
 // ── 타입 ────────────────────────────────────────────────────────────────────
@@ -15,248 +16,68 @@ type QuizQuestion = {
 };
 
 // ── Mock 데이터 ──────────────────────────────────────────────────────────────
-// 책별 6~8문항. book.id(슬러그) 키 기반. 알 수 없는 id는 DEFAULT_QUIZ로 폴백.
-
 const QUIZ_MAP: Record<string, QuizQuestion[]> = {
-  // 냄새 맡은 값 (star)
   star: [
-    {
-      id: "star-1",
-      type: "choice",
-      question: "원님이 냄새 맡은 값으로 무엇을 내렸나요?",
-      choices: ["엽전 소리", "쌀 한 가마", "칭찬 한마디"],
-    },
-    {
-      id: "star-2",
-      type: "choice",
-      question: "욕심 부린 주막 주인을 보고 어떤 마음이 들었나요?",
-      choices: ["답답했어요", "웃겼어요", "안타까웠어요"],
-    },
-    {
-      id: "star-3",
-      type: "choice",
-      question: "원님의 판결을 듣고 나는 어떤 기분이었나요?",
-      choices: ["통쾌했어요", "놀라웠어요", "이상했어요"],
-    },
-    {
-      id: "star-4",
-      type: "choice",
-      question: "이야기에서 가장 재미있었던 장면은?",
-      choices: ["냄새 맡는 장면", "판결 장면", "주막 장면"],
-    },
-    {
-      id: "star-5",
-      type: "choice",
-      question: "공평한 세상을 만들려면 무엇이 필요할까요?",
-      choices: ["지혜", "용기", "배려"],
-    },
-    {
-      id: "star-6",
-      type: "choice",
-      question: "이 이야기에서 배운 가장 큰 교훈은?",
-      choices: ["욕심은 화를 부른다", "지혜가 힘이다", "나눔이 행복이다"],
-    },
-    {
-      id: "star-7",
-      type: "free",
-      question: "이 이야기에서 가장 마음에 와닿은 장면을 자유롭게 적어볼까요?",
-      choices: [],
-    },
+    { id: "star-1", type: "choice", question: "원님이 냄새 맡은 값으로 무엇을 내렸나요?", choices: ["엽전 소리", "쌀 한 가마"] },
+    { id: "star-2", type: "choice", question: "욕심 부린 주막 주인을 보고 어떤 마음이 들었나요?", choices: ["답답했어요", "웃겼어요"] },
+    { id: "star-3", type: "choice", question: "원님의 판결을 듣고 나는 어떤 기분이었나요?", choices: ["통쾌했어요", "놀라웠어요"] },
+    { id: "star-4", type: "choice", question: "이야기에서 가장 재미있었던 장면은?", choices: ["냄새 맡는 장면", "판결 장면"] },
+    { id: "star-5", type: "choice", question: "공평한 세상을 만들려면 무엇이 필요할까요?", choices: ["지혜", "용기"] },
+    { id: "star-6", type: "choice", question: "이 이야기에서 배운 가장 큰 교훈은?", choices: ["욕심은 화를 부른다", "지혜가 힘이다"] },
+    { id: "star-7", type: "free", question: "이 이야기에서 가장 마음에 와닿은 장면을 자유롭게 적어볼까요?", choices: [] },
   ],
-  // 소금을 만드는 맷돌 (forest)
   forest: [
-    {
-      id: "forest-1",
-      type: "choice",
-      question: "마법 맷돌이 멈추지 않은 이유는 무엇일까요?",
-      choices: ["욕심 때문에", "주문을 잊어서", "맷돌이 고장나서"],
-    },
-    {
-      id: "forest-2",
-      type: "choice",
-      question: "선장을 보며 어떤 감정을 느꼈나요?",
-      choices: ["안타까웠어요", "화가 났어요", "불쌍했어요"],
-    },
-    {
-      id: "forest-3",
-      type: "choice",
-      question: "바다가 짠 이유를 알게 되었을 때 기분은?",
-      choices: ["신기했어요", "슬펐어요", "재미있었어요"],
-    },
-    {
-      id: "forest-4",
-      type: "choice",
-      question: "만약 내가 맷돌을 가졌다면 무엇을 만들고 싶나요?",
-      choices: ["맛있는 음식", "좋아하는 장난감", "소중한 사람에게 선물"],
-    },
-    {
-      id: "forest-5",
-      type: "choice",
-      question: "이야기에서 선장에게 아쉬웠던 점은?",
-      choices: ["욕심을 버리지 못한 것", "맷돌을 훔친 것", "바다에 뛰어든 것"],
-    },
-    {
-      id: "forest-6",
-      type: "choice",
-      question: "이 이야기가 전하는 메시지는?",
-      choices: ["욕심은 결국 손해", "용기있게 도전하자", "친구를 소중히"],
-    },
-    {
-      id: "forest-7",
-      type: "free",
-      question: "욕심 부린 선장에게 한마디 해준다면 어떻게 말하고 싶나요?",
-      choices: [],
-    },
+    { id: "forest-1", type: "choice", question: "마법 맷돌이 멈추지 않은 이유는 무엇일까요?", choices: ["욕심 때문에", "주문을 잊어서"] },
+    { id: "forest-2", type: "choice", question: "선장을 보며 어떤 감정을 느꼈나요?", choices: ["안타까웠어요", "화가 났어요"] },
+    { id: "forest-3", type: "choice", question: "바다가 짠 이유를 알게 되었을 때 기분은?", choices: ["신기했어요", "슬펐어요"] },
+    { id: "forest-4", type: "choice", question: "만약 내가 맷돌을 가졌다면 무엇을 만들고 싶나요?", choices: ["맛있는 음식", "좋아하는 장난감"] },
+    { id: "forest-5", type: "choice", question: "이야기에서 선장에게 아쉬웠던 점은?", choices: ["욕심을 버리지 못한 것", "맷돌을 훔친 것"] },
+    { id: "forest-6", type: "choice", question: "이 이야기가 전하는 메시지는?", choices: ["욕심은 결국 손해", "용기있게 도전하자"] },
+    { id: "forest-7", type: "free", question: "욕심 부린 선장에게 한마디 해준다면 어떻게 말하고 싶나요?", choices: [] },
   ],
-  // 송아지와 바꾼 무 (rabbit)
   rabbit: [
-    {
-      id: "rabbit-1",
-      type: "choice",
-      question: "농부가 원님께 무를 드린 마음은 어떤 마음이었을까요?",
-      choices: ["순수한 감사", "대가를 바란 마음", "자랑하고 싶은 마음"],
-    },
-    {
-      id: "rabbit-2",
-      type: "choice",
-      question: "욕심 많은 부자는 왜 소를 가져왔을까요?",
-      choices: ["더 좋은 것을 받으려고", "원님이 좋아서", "무가 없어서"],
-    },
-    {
-      id: "rabbit-3",
-      type: "choice",
-      question: "부자가 무를 받았을 때 어떤 기분이었을까요?",
-      choices: ["황당했을 것 같아요", "행복했을 것 같아요", "슬펐을 것 같아요"],
-    },
-    {
-      id: "rabbit-4",
-      type: "choice",
-      question: "농부의 행동에서 느낀 점은?",
-      choices: ["진심이 통한다", "욕심이 나쁘다", "나눔이 중요하다"],
-    },
-    {
-      id: "rabbit-5",
-      type: "choice",
-      question: "가장 인상 깊었던 장면은?",
-      choices: ["무를 드리는 장면", "소를 가져오는 장면", "원님의 반응"],
-    },
-    {
-      id: "rabbit-6",
-      type: "choice",
-      question: "이 이야기를 친구에게 한 마디로 소개한다면?",
-      choices: ["욕심은 금물!", "진심은 통한다", "재미있는 반전!"],
-    },
-    {
-      id: "rabbit-7",
-      type: "free",
-      question: "농부에게 짧은 편지를 쓴다면 어떤 말을 적고 싶나요?",
-      choices: [],
-    },
+    { id: "rabbit-1", type: "choice", question: "토끼는 왜 길을 떠났을까?", choices: ["친구를 찾으러", "늦어서 서둘러 가다가"] },
+    { id: "rabbit-2", type: "choice", question: "욕심 많은 부자는 왜 소를 가져왔을까요?", choices: ["더 좋은 것을 받으려고", "원님이 좋아서"] },
+    { id: "rabbit-3", type: "choice", question: "부자가 무를 받았을 때 어떤 기분이었을까요?", choices: ["황당했을 것 같아요", "행복했을 것 같아요"] },
+    { id: "rabbit-4", type: "choice", question: "농부의 행동에서 느낀 점은?", choices: ["진심이 통한다", "욕심이 나쁘다"] },
+    { id: "rabbit-5", type: "choice", question: "가장 인상 깊었던 장면은?", choices: ["무를 드리는 장면", "소를 가져오는 장면"] },
+    { id: "rabbit-6", type: "choice", question: "이 이야기를 친구에게 한 마디로 소개한다면?", choices: ["욕심은 금물!", "진심은 통한다"] },
+    { id: "rabbit-7", type: "free", question: "농부에게 짧은 편지를 쓴다면 어떤 말을 적고 싶나요?", choices: [] },
   ],
-  // 소금장수와 기름장수 (brave)
   brave: [
-    {
-      id: "brave-1",
-      type: "choice",
-      question: "두 사람이 다리 위에서 마주쳤을 때 어떤 기분이었을까요?",
-      choices: ["난처했을 것 같아요", "화가 났을 것 같아요", "재미있었을 것 같아요"],
-    },
-    {
-      id: "brave-2",
-      type: "choice",
-      question: "노인이 두 사람에게 해준 조언은 어떤 것이었나요?",
-      choices: ["양보하라", "빨리 지나가라", "도움을 청해라"],
-    },
-    {
-      id: "brave-3",
-      type: "choice",
-      question: "두 사람이 양보했을 때 어떤 일이 생겼나요?",
-      choices: ["모두 무사히 지나갔어요", "기름이 쏟아졌어요", "소금이 녹았어요"],
-    },
-    {
-      id: "brave-4",
-      type: "choice",
-      question: "노인의 지혜를 보고 어떤 생각이 들었나요?",
-      choices: ["지혜가 참 중요하다", "나도 저렇게 되고 싶다", "어른들은 역시 달라"],
-    },
-    {
-      id: "brave-5",
-      type: "choice",
-      question: "일상에서 양보가 필요한 상황은?",
-      choices: ["버스 자리", "친구와 의견 충돌", "줄 서기"],
-    },
-    {
-      id: "brave-6",
-      type: "choice",
-      question: "이 이야기에서 배운 것은?",
-      choices: ["양보와 배려", "빠른 판단력", "용감한 행동"],
-    },
-    {
-      id: "brave-7",
-      type: "free",
-      question: "두 사람에게 들려주고 싶은 짧은 조언을 적어볼까요?",
-      choices: [],
-    },
+    { id: "brave-1", type: "choice", question: "두 사람이 다리 위에서 마주쳤을 때 어떤 기분이었을까요?", choices: ["난처했을 것 같아요", "화가 났을 것 같아요"] },
+    { id: "brave-2", type: "choice", question: "노인이 두 사람에게 해준 조언은 어떤 것이었나요?", choices: ["양보하라", "빨리 지나가라"] },
+    { id: "brave-3", type: "choice", question: "두 사람이 양보했을 때 어떤 일이 생겼나요?", choices: ["모두 무사히 지나갔어요", "기름이 쏟아졌어요"] },
+    { id: "brave-4", type: "choice", question: "노인의 지혜를 보고 어떤 생각이 들었나요?", choices: ["지혜가 참 중요하다", "나도 저렇게 되고 싶다"] },
+    { id: "brave-5", type: "choice", question: "일상에서 양보가 필요한 상황은?", choices: ["버스 자리", "친구와 의견 충돌"] },
+    { id: "brave-6", type: "choice", question: "이 이야기에서 배운 것은?", choices: ["양보와 배려", "빠른 판단력"] },
+    { id: "brave-7", type: "free", question: "두 사람에게 들려주고 싶은 짧은 조언을 적어볼까요?", choices: [] },
   ],
 };
 
 const DEFAULT_QUIZ: QuizQuestion[] = [
-  {
-    id: "default-1",
-    type: "choice",
-    question: "이 책에서 가장 기억에 남는 장면은?",
-    choices: ["주인공의 선택", "반전 결말", "인상적인 대화"],
-  },
-  {
-    id: "default-2",
-    type: "choice",
-    question: "주인공의 마음이 어떠했을 것 같나요?",
-    choices: ["설렘", "걱정", "용기"],
-  },
-  {
-    id: "default-3",
-    type: "choice",
-    question: "이 이야기에서 배운 것은?",
-    choices: ["나눔의 소중함", "용기의 힘", "지혜의 가치"],
-  },
-  {
-    id: "default-4",
-    type: "free",
-    question: "이 책을 친구에게 소개하는 한 줄을 적어볼까요?",
-    choices: [],
-  },
+  { id: "default-1", type: "choice", question: "이 책에서 가장 기억에 남는 장면은?", choices: ["주인공의 선택", "반전 결말"] },
+  { id: "default-2", type: "choice", question: "주인공의 마음이 어떠했을 것 같나요?", choices: ["설렘", "걱정"] },
+  { id: "default-3", type: "choice", question: "이 이야기에서 배운 것은?", choices: ["나눔의 소중함", "용기의 힘"] },
+  { id: "default-4", type: "free", question: "이 책을 친구에게 소개하는 한 줄을 적어볼까요?", choices: [] },
 ];
 
-// ── 상수 ──────────────────────────────────────────────────────────────────────
-const BORDER_DIVIDER = "1px solid rgba(120,90,50,0.10)";
-const DOT_INACTIVE_COLOR = "rgba(120,90,50,0.25)";
-const BG_GRADIENT =
-  "linear-gradient(180deg, #FDF6E1 0%, #F4D5A3 60%, #EEC98A 100%)";
-
-// ── 컴포넌트 ─────────────────────────────────────────────────────────────────
+// ── 옵션 카드 컬러 매핑 ──
+const OPTION_COLORS = [
+  { bg: "#FDF2C4", border: "#F5E194", number: "#3D2E1E" }, // 1: 노랑
+  { bg: "#E1F2D5", border: "#BFE0A8", number: "#3D2E1E" }, // 2: 초록
+  { bg: "#FBE0DE", border: "#F4C7C3", number: "#3D2E1E" }, // 3: 핑크 (free input)
+];
 
 interface ChatPanelProps {
   book: Book;
   onComplete: () => void;
 }
 
-const BUBBLE_TEXT: Record<string, string> = {
-  star: "냄새 맡은 값… 재미있지? 🐰",
-  forest: "마법 맷돌 이야기, 어땠어? 🐰",
-  rabbit: "무랑 송아지 이야기! 🐰",
-  brave: "양보의 지혜를 느꼈니? 🐰",
-};
-const DEFAULT_BUBBLE = "정말 재미있는 이야기였지? 🐰";
-
 export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const router = useRouter();
-  const visuals = getBookVisuals(book.id);
+  const reduceMotion = useReducedMotion();
   const quizzes = QUIZ_MAP[book.id] ?? DEFAULT_QUIZ;
-  const bubbleText = BUBBLE_TEXT[book.id] ?? DEFAULT_BUBBLE;
-
-  // book 비주얼에서 자주 쓰는 조합을 변수로 묶음
-  const accentBg = visuals.palette.bg;
-  const accentColor = visuals.palette.titleColor ?? "#fff";
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -269,10 +90,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
     start: startSpeech,
     stop: stopSpeech,
     reset: resetSpeech,
-    error: speechError,
   } = useSpeechInput();
 
-  // 음성 인식 결과를 freeText에 누적
   useEffect(() => {
     if (!transcript) return;
     setFreeText((prev) => (prev ? `${prev.trim()} ${transcript}` : transcript));
@@ -281,13 +100,26 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
 
   const current = quizzes[currentIndex];
   const isLast = currentIndex === quizzes.length - 1;
-  const canProceed =
-    current.type === "choice"
-      ? selectedChoice !== null
-      : freeText.trim().length > 0;
+  const visibleChoices = current.type === "choice" ? current.choices.slice(0, 2) : [];
+  const freeOptionIndex = visibleChoices.length;
+  const isFreeSelected = selectedChoice === freeOptionIndex;
 
-  function handleSelect(i: number) {
-    setSelectedChoice(i);
+  const canProceed =
+    selectedChoice !== null &&
+    (selectedChoice < visibleChoices.length || freeText.trim().length > 0);
+
+  function handleSelectChoice(idx: number) {
+    setSelectedChoice(idx);
+    if (idx !== freeOptionIndex) {
+      setFreeText("");
+      if (isListening) stopSpeech();
+    }
+  }
+
+  function handleMicTap() {
+    setSelectedChoice(freeOptionIndex);
+    if (isListening) stopSpeech();
+    else startSpeech();
   }
 
   function handleNext() {
@@ -303,409 +135,620 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
     }
   }
 
-  function handleBack() {
-    router.back();
-  }
-
   return (
-    <div className="relative w-full max-w-[480px] mx-auto min-h-full flex flex-col">
+    <div
+      className="relative w-full max-w-[480px] mx-auto flex flex-col"
+      style={{ minHeight: "100%", backgroundColor: "var(--color-beige-soft)" }}
+    >
       {/* ── 헤더 ── */}
       <header
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{ borderBottom: BORDER_DIVIDER }}
+        className="flex items-center justify-between flex-shrink-0"
+        style={{
+          paddingTop: "calc(16px + env(safe-area-inset-top))",
+          paddingBottom: 12,
+          paddingLeft: 20,
+          paddingRight: 20,
+          backgroundColor: "var(--color-beige-soft)",
+        }}
       >
-        {/* 뒤로가기 */}
+        {/* 뒤로가기 — 단순 아이콘 */}
         <button
-          onClick={handleBack}
+          onClick={() => router.back()}
           aria-label="뒤로가기"
-          className="w-9 h-9 flex items-center justify-center rounded-full"
-          style={{
-            background: "var(--color-card)",
-            boxShadow: "var(--shadow-clay-sm)",
-            border: "var(--border-clay)",
-          }}
+          className="w-10 h-10 flex items-center justify-center"
+          style={{ color: "var(--color-brown)" }}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M15 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
 
-        {/* 책 아이콘 + 제목 + 카운터 */}
-        <div className="flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+        {/* 가운데: 책 표지 미니 + 제목 + 페이지 카운트 */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="relative flex-shrink-0 overflow-hidden"
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 10,
+              backgroundColor: "var(--color-card)",
+              boxShadow: "0 2px 5px rgba(60,40,20,0.15)",
+            }}
+          >
+            <Image
+              src="/ui/profile.png"
+              alt=""
+              fill
+              sizes="42px"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
+          <div className="flex flex-col leading-tight min-w-0">
+            <p
+              className="font-display"
               style={{
-                background: accentBg,
-                color: accentColor,
-                boxShadow: "var(--shadow-clay-sm)",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "var(--color-brown)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: 160,
               }}
             >
-              📖
-            </span>
-            <span
-              className="font-display text-base font-bold"
-              style={{ color: "var(--color-brown)", maxWidth: 160 }}
-            >
               {book.title}
-            </span>
+            </p>
+            <p style={{ fontSize: 12, color: "var(--color-brown-soft)", marginTop: 2 }}>
+              {currentIndex + 1}/{quizzes.length} 페이지
+            </p>
           </div>
-          <span className="text-xs" style={{ color: "var(--color-brown-soft)" }}>
-            {currentIndex + 1} / {quizzes.length}
-          </span>
         </div>
 
-        {/* 힌트 버튼 (시각 전용) */}
+        {/* 힌트 버튼 — pill */}
         <button
-          aria-label="힌트"
-          className="w-9 h-9 flex items-center justify-center rounded-full text-sm"
+          type="button"
+          aria-label="힌트 보기"
+          className="flex items-center gap-1.5 flex-shrink-0"
           style={{
-            background: "var(--color-card)",
-            boxShadow: "var(--shadow-clay-sm)",
-            border: "var(--border-clay)",
-            color: "var(--color-brown-soft)",
+            padding: "8px 14px",
+            borderRadius: 999,
+            backgroundColor: "var(--color-card)",
+            color: "var(--color-brown)",
+            fontFamily: "var(--font-display)",
+            fontSize: 14,
+            fontWeight: 700,
+            boxShadow: "0 2px 5px rgba(60,40,20,0.12)",
           }}
         >
-          💡
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.6 1 1.5 1 2.3v1h6v-1c0-.8.4-1.7 1-2.3A7 7 0 0 0 12 2z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          힌트
         </button>
       </header>
 
-      {/* ── 메인 영역: 배경 + 토끼 + 말풍선 ── */}
+      {/* ── 이미지/씬 영역 — 토끼 + 말풍선 ── */}
       <div
-        role="img"
-        aria-label="토끼 캐릭터 일러스트 영역"
-        className="relative flex flex-col items-center justify-end flex-shrink-0 overflow-hidden"
+        className="relative flex-shrink-0"
         style={{
-          background: BG_GRADIENT,
-          minHeight: 200,
-          paddingBottom: 0,
-          boxShadow: "inset 0 -4px 12px rgba(120,90,50,0.12)",
+          height: 300,
+          backgroundColor: "var(--color-beige-soft)",
+          overflow: "hidden",
         }}
       >
-        {/* 인라인 SVG: 구름 */}
-        <svg
-          aria-hidden="true"
-          className="absolute top-4 left-6"
-          width="60"
-          height="28"
-          viewBox="0 0 60 28"
-          fill="none"
+        {/* 구름 데코 (cl.png) — 좌/우 상단 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 14,
+            left: 18,
+            width: 72,
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
         >
-          <ellipse cx="30" cy="18" rx="28" ry="10" fill="white" fillOpacity="0.85" />
-          <ellipse cx="18" cy="14" rx="14" ry="9" fill="white" fillOpacity="0.85" />
-          <ellipse cx="42" cy="16" rx="12" ry="8" fill="white" fillOpacity="0.85" />
-        </svg>
-
-        {/* 인라인 SVG: 구름 (우측) */}
-        <svg
-          aria-hidden="true"
-          className="absolute top-6 right-4"
-          width="44"
-          height="22"
-          viewBox="0 0 44 22"
-          fill="none"
+          <Image
+            src="/ui/cl.png"
+            alt=""
+            width={72}
+            height={48}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            top: 24,
+            right: 18,
+            width: 60,
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
         >
-          <ellipse cx="22" cy="14" rx="20" ry="8" fill="white" fillOpacity="0.80" />
-          <ellipse cx="12" cy="10" rx="10" ry="7" fill="white" fillOpacity="0.80" />
-          <ellipse cx="32" cy="12" rx="9" ry="6" fill="white" fillOpacity="0.80" />
-        </svg>
+          <Image
+            src="/ui/cl.png"
+            alt=""
+            width={60}
+            height={40}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
 
-        {/* 인라인 SVG: 풀 (좌) */}
-        <svg
-          aria-hidden="true"
-          className="absolute bottom-0 left-2"
-          width="48"
-          height="32"
-          viewBox="0 0 48 32"
-          fill="none"
+        {/* 덤불 데코 (obj1.png) — 좌/우 하단, 안 짤리게 안쪽 배치 */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            left: 28,
+            width: 70,
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
         >
-          <ellipse cx="10" cy="28" rx="8" ry="12" fill="#6BAD6A" fillOpacity="0.7" transform="rotate(-10 10 28)" />
-          <ellipse cx="22" cy="26" rx="7" ry="14" fill="#5CA05A" fillOpacity="0.8" />
-          <ellipse cx="34" cy="28" rx="8" ry="11" fill="#6BAD6A" fillOpacity="0.7" transform="rotate(8 34 28)" />
-        </svg>
-
-        {/* 인라인 SVG: 풀 (우) */}
-        <svg
-          aria-hidden="true"
-          className="absolute bottom-0 right-2"
-          width="48"
-          height="32"
-          viewBox="0 0 48 32"
-          fill="none"
+          <Image
+            src="/ui/obj1.png"
+            alt=""
+            width={70}
+            height={44}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            right: 28,
+            width: 70,
+            zIndex: 1,
+            pointerEvents: "none",
+            transform: "scaleX(-1)",
+          }}
         >
-          <ellipse cx="14" cy="28" rx="8" ry="11" fill="#6BAD6A" fillOpacity="0.7" transform="rotate(-8 14 28)" />
-          <ellipse cx="26" cy="26" rx="7" ry="14" fill="#5CA05A" fillOpacity="0.8" />
-          <ellipse cx="38" cy="28" rx="7" ry="12" fill="#6BAD6A" fillOpacity="0.7" transform="rotate(10 38 28)" />
-        </svg>
+          <Image
+            src="/ui/obj1.png"
+            alt=""
+            width={70}
+            height={44}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            right: 90,
+            width: 38,
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
+        >
+          <Image
+            src="/ui/obj2.png"
+            alt=""
+            width={38}
+            height={28}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
 
-        {/* 토끼 + 말풍선 레이아웃 */}
-        <div className="relative flex items-end justify-center w-full px-6 pt-6">
-          {/* 말풍선 */}
-          <div
-            className="relative mb-2 mr-2"
+        {/* 토끼 — 절대 중앙 + 더 큼 + 살짝 흔들림 */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 340,
+            height: 300,
+            overflow: "hidden",
+            zIndex: 2,
+          }}
+        >
+          <motion.div
+            animate={
+              reduceMotion
+                ? undefined
+                : {
+                    y: [0, -4, 0],
+                    rotate: [-1.2, 1.2, -1.2],
+                  }
+            }
+            transition={
+              reduceMotion
+                ? undefined
+                : {
+                    y: { duration: 2.6, repeat: Infinity, ease: "easeInOut" },
+                    rotate: { duration: 3.6, repeat: Infinity, ease: "easeInOut" },
+                  }
+            }
             style={{
-              background: "white",
-              borderRadius: "var(--radius-clay)",
-              padding: "10px 16px",
-              boxShadow: "var(--shadow-clay-sm)",
-              maxWidth: 200,
-              fontSize: 13,
-              lineHeight: 1.5,
-              color: "var(--color-brown)",
-              fontWeight: 500,
+              position: "absolute",
+              inset: 0,
+              transformOrigin: "bottom center",
             }}
           >
-            {bubbleText}
-            {/* 말풍선 꼬리 (우측 아래) */}
-            <span
-              aria-hidden="true"
+            <Image
+              src="/toki/2.png"
+              alt="토끼"
+              width={420}
+              height={420}
               style={{
                 position: "absolute",
-                right: -10,
-                bottom: 14,
-                width: 0,
-                height: 0,
-                borderTop: "8px solid transparent",
-                borderBottom: "8px solid transparent",
-                borderLeft: "12px solid white",
+                top: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 420,
+                height: 420,
+                objectFit: "contain",
               }}
+              priority
             />
-          </div>
+          </motion.div>
+        </div>
 
-          {/* 토끼 이미지 */}
-          <img
-            src="/toki/1.png"
-            alt="토끼 캐릭터"
-            className="flex-shrink-0"
-            style={{ width: 120, height: 120, objectFit: "contain" }}
+        {/* 말풍선 — 중앙 상단 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 14,
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "12px 18px",
+            backgroundColor: "#FFFBF0",
+            borderRadius: 18,
+            boxShadow: "0 4px 10px rgba(60,40,20,0.15)",
+            maxWidth: 240,
+            zIndex: 3,
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 15,
+              fontWeight: 700,
+              color: "var(--color-brown)",
+              lineHeight: 1.45,
+              wordBreak: "keep-all",
+            }}
+          >
+            {current.question}
+          </p>
+          {/* 꼬리 — 아래쪽 가운데 (토끼 머리쪽) */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: -8,
+              transform: "translateX(-50%)",
+              width: 0,
+              height: 0,
+              borderLeft: "8px solid transparent",
+              borderRight: "8px solid transparent",
+              borderTop: "12px solid #FFFBF0",
+              filter: "drop-shadow(0 2px 1px rgba(60,40,20,0.06))",
+            }}
           />
         </div>
       </div>
 
-      {/* ── 카드 영역 ── */}
+      {/* ── 옵션 카드 ── */}
       <div
-        className="flex-1 flex flex-col overflow-y-auto px-4 py-4 gap-3"
-        style={{ background: "var(--color-beige-soft)" }}
-      >
-        {/* Q 배지 + 질문 */}
-        <div
-          className="rounded-[var(--radius-clay)] p-5"
-          style={{
-            background: "var(--color-card)",
-            boxShadow: "var(--shadow-clay)",
-          }}
-        >
-          {/* Q 배지 */}
-          <div className="flex items-center gap-2 mb-3">
-            <span
-              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-              style={{
-                background: accentBg,
-                color: accentColor,
-                boxShadow: "var(--shadow-clay-sm)",
-              }}
-            >
-              Q
-            </span>
-            <span className="text-xs font-semibold" style={{ color: "var(--color-brown-soft)" }}>
-              {currentIndex + 1}번 질문
-            </span>
-          </div>
-
-          {/* 질문 텍스트 */}
-          <p
-            className="font-display text-base font-bold mb-4"
-            style={{ color: "var(--color-brown)", lineHeight: 1.5, wordBreak: "keep-all" }}
-          >
-            {current.question}
-          </p>
-
-          {/* 답변 영역 — 객관식 또는 주관식 */}
-          {current.type === "choice" ? (
-            <div className="flex flex-col gap-2" role="group" aria-label="선택지">
-              {current.choices.map((choice, idx) => {
-                const isSelected = selectedChoice === idx;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleSelect(idx)}
-                    aria-pressed={isSelected}
-                    className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-[var(--radius-clay-sm)] transition-all duration-150"
-                    style={{
-                      background: isSelected ? `${accentBg}22` : "var(--color-beige-soft)",
-                      border: isSelected
-                        ? `2px solid ${accentBg}`
-                        : "2px solid transparent",
-                      boxShadow: isSelected ? "var(--shadow-clay-sm)" : "none",
-                    }}
-                  >
-                    {/* 번호 동그라미 */}
-                    <span
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                      style={{
-                        background: isSelected ? accentBg : "var(--color-card)",
-                        color: isSelected ? accentColor : "var(--color-brown-soft)",
-                        boxShadow: "var(--shadow-clay-sm)",
-                        transition: "background 0.15s, color 0.15s",
-                      }}
-                    >
-                      {idx + 1}
-                    </span>
-                    <span
-                      className="text-sm font-medium"
-                      style={{
-                        color: isSelected ? "var(--color-brown)" : "var(--color-brown-soft)",
-                        transition: "color 0.15s",
-                      }}
-                    >
-                      {choice}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <textarea
-                value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-                placeholder={
-                  isListening
-                    ? "듣고 있어요…"
-                    : "여기에 자유롭게 답을 적거나 마이크로 말해보세요"
-                }
-                aria-label="자유 답변"
-                rows={4}
-                className="w-full px-4 py-3 rounded-[var(--radius-clay-sm)] resize-none text-sm leading-relaxed"
-                style={{
-                  background: "var(--color-beige-soft)",
-                  color: "var(--color-brown)",
-                  border: "2px solid transparent",
-                  boxShadow: "var(--shadow-clay-sm) inset",
-                  fontFamily: "inherit",
-                  outline: "none",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = accentBg;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "transparent";
-                }}
-              />
-              {speechSupported && (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => (isListening ? stopSpeech() : startSpeech())}
-                    aria-label={isListening ? "음성 입력 중지" : "음성으로 입력"}
-                    aria-pressed={isListening}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 flex-shrink-0"
-                    style={{
-                      background: isListening ? accentBg : "var(--color-card)",
-                      color: isListening ? accentColor : "var(--color-brown-soft)",
-                      boxShadow: "var(--shadow-clay-sm)",
-                      border: "var(--border-clay)",
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <rect
-                        x="9"
-                        y="3"
-                        width="6"
-                        height="11"
-                        rx="3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill={isListening ? "currentColor" : "none"}
-                      />
-                      <path
-                        d="M5 11a7 7 0 0 0 14 0"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M12 18v3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                  <span
-                    className="text-xs"
-                    style={{
-                      color: isListening
-                        ? "var(--color-brown)"
-                        : "var(--color-brown-soft)",
-                    }}
-                  >
-                    {isListening
-                      ? "듣는 중… 다 말한 뒤 잠시 기다려주세요"
-                      : speechError === "not-allowed"
-                      ? "마이크 권한이 필요해요"
-                      : speechError === "no-speech"
-                      ? "들리지 않았어요. 다시 시도해보세요"
-                      : speechError
-                      ? "음성 인식에 실패했어요. 다시 시도해주세요"
-                      : "마이크를 눌러 말로 답할 수 있어요"}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── 푸터: 진행 점 + 다음 버튼 ── */}
-      <footer
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+        className="flex-1 flex flex-col"
         style={{
-          background: "var(--color-beige-soft)",
-          borderTop: BORDER_DIVIDER,
+          background: "var(--color-card)",
+          borderRadius: "24px 24px 0 0",
+          padding: "20px 20px 10px",
+          boxShadow: "0 -6px 16px rgba(60,40,20,0.08)",
+          gap: 10,
         }}
       >
-        {/* 깃발 + 진행 점 */}
-        <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="text-base">🚩</span>
-          <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={currentIndex + 1} aria-valuemin={1} aria-valuemax={quizzes.length} aria-label={`진행 상황: ${currentIndex + 1}/${quizzes.length}`}>
-            {quizzes.map((_, idx) => (
-              <span
-                key={idx}
-                className="rounded-full transition-all duration-200"
-                style={{
-                  width: idx === currentIndex ? 10 : 7,
-                  height: idx === currentIndex ? 10 : 7,
-                  background:
-                    idx === currentIndex ? accentBg : DOT_INACTIVE_COLOR,
-                  display: "inline-block",
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        {current.type === "choice" ? (
+          <>
+            {/* 옵션 1, 2 (객관식) */}
+            {visibleChoices.map((choice, idx) => {
+              const color = OPTION_COLORS[idx];
+              const isSelected = selectedChoice === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectChoice(idx)}
+                  aria-pressed={isSelected}
+                  className="flex items-center gap-3 text-left transition-all"
+                  style={{
+                    padding: "12px 12px",
+                    borderRadius: 16,
+                    backgroundColor: "var(--color-card)",
+                    border: isSelected
+                      ? `2px solid ${color.border}`
+                      : "1.5px solid rgba(120,90,50,0.20)",
+                    boxShadow: isSelected
+                      ? `0 2px 8px rgba(60,40,20,0.12), inset 0 0 0 1px ${color.border}`
+                      : "none",
+                  }}
+                >
+                  <span
+                    className="flex items-center justify-center flex-shrink-0 font-display"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      backgroundColor: color.bg,
+                      color: color.number,
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {idx + 1}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "var(--color-brown)",
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    {choice}
+                  </span>
+                </button>
+              );
+            })}
 
-        {/* 다음 버튼 */}
+            {/* 옵션 3: 마이크/자유입력 */}
+            <button
+              type="button"
+              onClick={() => handleSelectChoice(freeOptionIndex)}
+              aria-pressed={isFreeSelected}
+              className="flex items-center gap-3 text-left transition-all"
+              style={{
+                padding: "12px 12px",
+                borderRadius: 16,
+                backgroundColor: "var(--color-card)",
+                border: isFreeSelected
+                  ? `2px solid ${OPTION_COLORS[2].border}`
+                  : "1.5px solid rgba(120,90,50,0.20)",
+                boxShadow: isFreeSelected
+                  ? `0 2px 8px rgba(60,40,20,0.12), inset 0 0 0 1px ${OPTION_COLORS[2].border}`
+                  : "none",
+              }}
+            >
+              <span
+                className="flex items-center justify-center flex-shrink-0 font-display"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  backgroundColor: OPTION_COLORS[2].bg,
+                  color: OPTION_COLORS[2].number,
+                  fontSize: 16,
+                  fontWeight: 700,
+                }}
+              >
+                {freeOptionIndex + 1}
+              </span>
+              <span
+                className="flex-1"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "var(--color-brown-soft)",
+                  fontFamily: "var(--font-display)",
+                }}
+              >
+                마이크 누르고 내 생각 말하기
+              </span>
+              {speechSupported && (
+                <span
+                  role="button"
+                  aria-label={isListening ? "음성 입력 중지" : "음성 입력 시작"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMicTap();
+                  }}
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    backgroundColor: isListening
+                      ? "var(--color-green-deep)"
+                      : "var(--color-green)",
+                    color: "#FFFBF0",
+                    boxShadow: "0 3px 6px rgba(60,40,20,0.18)",
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+                    <path d="M5 11a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M12 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </span>
+              )}
+            </button>
+          </>
+        ) : (
+          /* ── 자유 응답 — 큰 마이크 UI ── */
+          <div
+            className="flex flex-col items-center justify-center"
+            style={{ flex: 1, padding: "8px 8px 12px", gap: 18 }}
+          >
+            {/* 타이틀 */}
+            <div className="flex items-center justify-center">
+              <p
+                className="font-display"
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "var(--color-brown)",
+                }}
+              >
+                네 생각을 말해보자!
+              </p>
+            </div>
+
+            {/* 가운데 큰 마이크 + 좌/우 안내 태그 */}
+            <div className="flex items-center justify-center gap-3 w-full" style={{ flexWrap: "nowrap" }}>
+              {/* 좌측 안내 태그 */}
+              <div
+                style={{
+                  flex: "0 1 auto",
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  backgroundColor: "#E1F2D5",
+                  border: "1.5px solid #BFE0A8",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--color-brown)",
+                  fontFamily: "var(--font-display)",
+                  lineHeight: 1.4,
+                  textAlign: "center",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--color-green-deep)" />
+                    <path d="M5 11a7 7 0 0 0 14 0" stroke="var(--color-green-deep)" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </span>
+                {"버튼을 누르고\n생각을 말해보세요."}
+              </div>
+
+              {/* 가운데 큰 마이크 버튼 */}
+              <button
+                type="button"
+                onClick={handleMicTap}
+                aria-label={isListening ? "음성 입력 중지" : "음성 입력 시작"}
+                aria-pressed={isListening}
+                className="flex items-center justify-center flex-shrink-0 transition-transform active:scale-95"
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: "50%",
+                  backgroundColor: isListening
+                    ? "var(--color-green-deep)"
+                    : "var(--color-green)",
+                  color: "#FFFBF0",
+                  boxShadow:
+                    "0 8px 20px rgba(95,160,72,0.45), inset 0 -3px 6px rgba(0,0,0,0.12), inset 0 3px 6px rgba(255,255,255,0.35)",
+                  border: "3px solid #FFFBF0",
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+                  <path d="M5 11a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <path d="M12 18v3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </button>
+
+              {/* 우측 안내 태그 */}
+              <div
+                style={{
+                  flex: "0 1 auto",
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  backgroundColor: "#FFFBF0",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--color-brown)",
+                  fontFamily: "var(--font-display)",
+                  lineHeight: 1.4,
+                  textAlign: "center",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                <span style={{ fontSize: 16, display: "block", marginBottom: 2 }}>👶</span>
+                {"천천히 말해도\n괜찮아!"}
+              </div>
+            </div>
+
+            {/* 하단 힌트 pill */}
+            <div
+              style={{
+                padding: "8px 18px",
+                borderRadius: 999,
+                backgroundColor: "rgba(120,90,50,0.08)",
+                fontSize: 13,
+                color: "var(--color-brown-soft)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 600,
+              }}
+            >
+              버튼을 다시 누르면 종료돼요
+            </div>
+
+            {/* 입력 텍스트 미리보기 (있을 때만) */}
+            {freeText && (
+              <div
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  backgroundColor: "var(--color-beige-soft)",
+                  borderLeft: "4px solid var(--color-green-deep)",
+                  fontSize: 14,
+                  color: "var(--color-brown)",
+                  fontFamily: "var(--font-body)",
+                  textAlign: "left",
+                  marginTop: -4,
+                }}
+              >
+                {freeText}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── 푸터 ── */}
+      <footer
+        className="flex items-center justify-center flex-shrink-0"
+        style={{
+          padding: "12px 20px",
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
+          backgroundColor: "var(--color-card)",
+        }}
+      >
+        {/* 다음 버튼 — 큼직하게 */}
         <button
+          type="button"
           onClick={handleNext}
           disabled={!canProceed}
-          className="px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-150"
+          aria-label={isLast ? "완료" : "다음 페이지"}
+          className="flex items-center justify-center gap-2 font-display transition-all w-full"
           style={{
-            background: canProceed ? accentBg : "var(--color-card)",
-            color: canProceed ? accentColor : "var(--color-brown-soft)",
-            boxShadow: canProceed
-              ? "var(--shadow-clay)"
-              : "var(--shadow-clay-sm)",
-            border: "var(--border-clay)",
-            opacity: canProceed ? 1 : 0.5,
+            padding: "18px 32px",
+            borderRadius: 999,
+            backgroundColor: canProceed ? "var(--color-green)" : "rgba(120,90,50,0.18)",
+            color: canProceed ? "#FFFBF0" : "var(--color-brown-soft)",
+            fontSize: 20,
+            fontWeight: 700,
+            boxShadow: canProceed ? "0 6px 14px rgba(95,160,72,0.40)" : "none",
             cursor: canProceed ? "pointer" : "not-allowed",
+            maxWidth: 420,
           }}
         >
           {isLast ? "완료" : "다음"}
+          <span aria-hidden="true" style={{ fontSize: 22 }}>›</span>
         </button>
       </footer>
 
-      {/* focus-visible 스타일 */}
       <style>{`
         button:focus-visible {
           outline: 2px solid var(--color-brown);

@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 const PHRASES = [
-  "안녕! 오늘은 뭐 읽을까?",
-  "재미있는 책이 가득해~",
-  "같이 이야기 만들어볼래?",
-  "어떤 책이 제일 좋아?",
-  "오늘도 멋진 하루야!",
+  "오늘은 어떤 이야기를 만들어볼까?",
+  "네 생각이 정말 궁금해!",
+  "내가 옆에서 같이 만들어줄게.",
+  "이야기 한 자락 들려줘~",
+  "어떤 마음이 들었어?",
+  "함께 책을 만들어보자!",
 ];
 
 const INTERVAL_MS = 3800;

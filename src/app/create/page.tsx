@@ -127,16 +127,13 @@ export default function CreatePage() {
               animate="center"
               exit="exitToLeft"
               style={{
-                flex: 1,
+                position: "fixed",
+                inset: 0,
+                zIndex: 100,
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "center",
                 backgroundColor: "var(--color-beige-soft)",
-                margin: "12px 12px 0",
-                borderRadius: "var(--radius-clay) var(--radius-clay) 0 0",
-                boxShadow: "var(--shadow-clay-sm)",
-                border: "var(--border-clay)",
-                borderBottom: "none",
-                overflow: "hidden",
               }}
             >
               {selectedBook && (

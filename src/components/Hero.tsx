@@ -41,7 +41,7 @@ export default function Hero() {
         />
       </div>
 
-      {/* 마스코트 (중간 레이어) — bg와 bg-front 사이에서 공간감 형성 */}
+      {/* 마스코트 (중간 레이어) */}
       <div
         className="absolute inset-0 z-10 flex justify-center items-end"
         style={{
@@ -54,14 +54,21 @@ export default function Hero() {
         <RabbitMascot />
       </div>
 
-      {/* 전경 이미지 (화분·바닥선) — 토끼 위에 오버레이되어 깊이감 부여 */}
-      <div className="absolute inset-0 z-20 pointer-events-none">
+      {/* 로고 — 토끼 우측 하단 */}
+      <div
+        className="absolute z-20 pointer-events-none"
+        style={{
+          right: 12,
+          bottom: 8,
+          width: 88,
+        }}
+      >
         <Image
-          src="/toki/bg-front.png"
-          alt=""
-          fill
-          sizes="(max-width: 480px) 100vw, 480px"
-          className="object-cover object-center"
+          src="/ui/logo.png"
+          alt="북적북적"
+          width={88}
+          height={70}
+          style={{ width: "100%", height: "auto", display: "block" }}
           priority
         />
       </div>
