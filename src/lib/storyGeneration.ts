@@ -125,6 +125,43 @@ function extractImageBuffer(
   return Buffer.from(imageFile.uint8Array);
 }
 
+/**
+ * ref 이미지 Buffer[]와 텍스트 프롬프트를 IMAGE_MODEL에 전달하여 생성된 이미지를 Buffer로 반환한다.
+ * generateSceneImage / generateCoverImage 의 공통 호출 패턴을 추출.
+ */
+async function callImageModel(
+  textPrompt: string,
+  refBuffers: Buffer[],
+  errorLabel: string,
+): Promise<Buffer> {
+  const imageContents = refBuffers.map((buf) => ({
+    type: "image" as const,
+    image: buf,
+  }));
+
+  const result = await generateText({
+    model: IMAGE_MODEL,
+    maxRetries: 0,
+    providerOptions: {
+      google: {
+        responseModalities: ["IMAGE"],
+        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
+      },
+    },
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: textPrompt },
+          ...imageContents,
+        ],
+      },
+    ],
+  });
+
+  return extractImageBuffer(result, errorLabel);
+}
+
 function extractJsonArray(raw: string): unknown {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = (fenced ? fenced[1] : raw).trim();
@@ -300,36 +337,8 @@ export async function generateSceneImage(
   refBuffers: Buffer[],
 ): Promise<Buffer> {
   const sceneText = `장면 ${scene.idx} — ${scene.title}: ${scene.body}`;
-
-  const imageContents = refBuffers.map((buf) => ({
-    type: "image" as const,
-    image: buf,
-  }));
-
-  const result = await generateText({
-    model: IMAGE_MODEL,
-    maxRetries: 0,
-    providerOptions: {
-      google: {
-        responseModalities: ["IMAGE"],
-        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
-      },
-    },
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `${IMAGE_SYSTEM_TONE}\n\n${SCENE_GUIDE}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${sceneText}`,
-          },
-          ...imageContents,
-        ],
-      },
-    ],
-  });
-
-  return extractImageBuffer(result, `장면 ${scene.idx}`);
+  const prompt = `${IMAGE_SYSTEM_TONE}\n\n${SCENE_GUIDE}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${sceneText}`;
+  return callImageModel(prompt, refBuffers, `장면 ${scene.idx}`);
 }
 
 /**
@@ -341,11 +350,6 @@ export async function generateCoverImage(
   storySummary: string,
   refBuffers: Buffer[],
 ): Promise<Buffer> {
-  const imageContents = refBuffers.map((buf) => ({
-    type: "image" as const,
-    image: buf,
-  }));
-
   const coverPrompt = [
     IMAGE_SYSTEM_TONE,
     "이 이미지는 동화책 표지입니다. 제목과 주인공이 인상적으로 담긴 표지 일러스트를 그려주세요.",
@@ -354,25 +358,5 @@ export async function generateCoverImage(
     "위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지해주세요. 따뜻하고 밝은 표지 구도.",
   ].join("\n");
 
-  const result = await generateText({
-    model: IMAGE_MODEL,
-    maxRetries: 0,
-    providerOptions: {
-      google: {
-        responseModalities: ["IMAGE"],
-        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
-      },
-    },
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: coverPrompt },
-          ...imageContents,
-        ],
-      },
-    ],
-  });
-
-  return extractImageBuffer(result, "표지");
+  return callImageModel(coverPrompt, refBuffers, "표지");
 }
