@@ -53,6 +53,15 @@ function requireEnv(): void {
   }
 }
 
+// ---------- 장면 배열 ----------
+
+const SCENES = [
+  { idx: 1, key: 'scene1_cover'         as keyof typeof PROMPTS, out: '02-scene-cover.png' },
+  { idx: 2, key: 'scene2_giant_pumpkin' as keyof typeof PROMPTS, out: '03-scene-giant-pumpkin.png' },
+  { idx: 3, key: 'scene3_horse_gift'    as keyof typeof PROMPTS, out: '04-scene-horse-gift.png' },
+  { idx: 5, key: 'scene5_pumpkin_back'  as keyof typeof PROMPTS, out: '05-scene-pumpkin-back.png' },
+];
+
 // ---------- reference 이미지 생성 ----------
 
 async function generateReference(outDir: string): Promise<string> {
@@ -71,6 +80,38 @@ async function generateReference(outDir: string): Promise<string> {
   return filePath;
 }
 
+// ---------- 장면 이미지 생성 ----------
+
+async function generateScene(
+  outDir: string,
+  refPath: string,
+  scene: { idx: number; key: keyof typeof PROMPTS; out: string }
+): Promise<string> {
+  console.log(`[poc-image] 장면 ${scene.idx} 생성 중...`);
+  const refBuffer = fs.readFileSync(refPath);
+  const scenePrompt = PROMPTS[scene.key];
+  const result = await generateText({
+    model: MODEL,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: `${PROMPTS.systemTone}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${scenePrompt}` },
+          { type: 'image', image: refBuffer },
+        ],
+      },
+    ],
+  });
+  const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
+  if (!imageFile) {
+    throw new Error(`장면 ${scene.idx} 응답에 이미지가 없습니다. PROMPTS.${scene.key} 또는 reference 입력 지원 확인 필요.`);
+  }
+  const filePath = path.join(outDir, scene.out);
+  fs.writeFileSync(filePath, imageFile.uint8Array);
+  console.log(`  ✓ 저장: ${filePath}`);
+  return filePath;
+}
+
 // ---------- main ----------
 
 async function main() {
@@ -79,8 +120,12 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const refPath = await generateReference(outDir);
+  const scenePaths: string[] = [];
+  for (const scene of SCENES) {
+    scenePaths.push(await generateScene(outDir, refPath, scene));
+  }
 
-  // TODO T4
+  // TODO T5
 }
 
 main().catch((err) => {
