@@ -297,6 +297,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
 
       {/* ── 메인 영역: 배경 + 토끼 + 말풍선 ── */}
       <div
+        role="img"
+        aria-label="토끼 캐릭터 일러스트 영역"
         className="relative flex flex-col items-center justify-end flex-shrink-0 overflow-hidden"
         style={{
           background: "linear-gradient(180deg, var(--color-beige-soft) 0%, var(--color-beige) 100%)",
