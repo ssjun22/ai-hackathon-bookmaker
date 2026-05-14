@@ -41,3 +41,6 @@ next-env.d.ts
 .agents/
 .claude/skills/agentation
 skills-lock.json
+
+# PoC 임시 이미지 출력
+tmp/
