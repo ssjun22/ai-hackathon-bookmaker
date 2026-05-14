@@ -5,6 +5,12 @@ import fs from 'node:fs';
 // .env.local 우선, 없으면 .env로 폴백 (Next.js 컨벤션과 일치)
 loadDotenv({ path: path.resolve(process.cwd(), '.env.local') });
 loadDotenv({ path: path.resolve(process.cwd(), '.env') });
+
+// 키 변수명 호환: GOOGLE_API_KEY 도 GOOGLE_GENERATIVE_AI_API_KEY 와 동일하게 인식
+if (process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_API_KEY;
+}
+
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 
@@ -51,9 +57,11 @@ const CONVERSATION = [
 
 function requireEnv(): void {
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    console.error('[poc-image] GOOGLE_GENERATIVE_AI_API_KEY 환경변수가 없습니다.');
+    console.error('[poc-image] GOOGLE_GENERATIVE_AI_API_KEY 또는 GOOGLE_API_KEY 환경변수가 없습니다.');
     console.error('  1) https://aistudio.google.com 에서 API key 발급 (무료, 카드 등록 불필요)');
-    console.error('  2) 프로젝트 루트 .env.local (권장) 또는 .env 에 GOOGLE_GENERATIVE_AI_API_KEY=<키> 추가');
+    console.error('  2) 프로젝트 루트 .env.local 또는 .env 에 다음 중 한 줄 추가:');
+    console.error('     GOOGLE_GENERATIVE_AI_API_KEY=<키>   (AI SDK 표준)');
+    console.error('     GOOGLE_API_KEY=<키>                  (자동으로 위 이름에 매핑)');
     console.error('  3) 다시 실행: pnpm tsx scripts/poc-image.ts');
     process.exit(1);
   }
