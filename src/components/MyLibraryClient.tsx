@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { MyBook } from "@/lib/types";
+import { displayTitle } from "@/lib/utils";
 
 interface MyLibraryClientProps {
   // 신규 저장된 bookId (URL ?new=... 에서 추출해 전달)
@@ -15,10 +16,6 @@ function formatDate(iso: string): string {
     .toLocaleDateString("ko-KR")
     .replace(/\. /g, ".")
     .replace(/\.$/, "");
-}
-
-function displayTitle(title: string): string {
-  return title.replace(/\s*[—–-]\s*나의\s*동화\s*$/u, "");
 }
 
 function BookCard({

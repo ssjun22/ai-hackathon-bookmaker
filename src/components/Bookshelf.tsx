@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { MyBook } from "@/lib/types";
+import { displayTitle } from "@/lib/utils";
 
 const containerVariants = {
   hidden: {},
@@ -14,10 +15,6 @@ const itemVariants = {
   hidden: { x: -16, opacity: 0 },
   show: { x: 0, opacity: 1 },
 };
-
-function displayTitle(title: string): string {
-  return title.replace(/\s*[—–-]\s*나의\s*동화\s*$/u, "");
-}
 
 function SavedBookCard({
   book,
