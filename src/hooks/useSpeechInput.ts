@@ -1,4 +1,6 @@
 "use client";
+// NOTE: dead code — ChatPanel이 퀴즈 UI로 전면 재작성됨에 따라 더 이상 사용되지 않음 (2026-05-14).
+// 다른 컴포넌트에서 음성 입력이 필요할 경우 재활성화 가능.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
