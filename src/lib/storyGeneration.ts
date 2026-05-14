@@ -89,6 +89,21 @@ const SCENE_GUIDE =
 
 // ── 내부 유틸 ─────────────────────────────────────────────────────────────────
 
+/**
+ * generateText 응답에서 첫 번째 이미지 파일을 찾아 Buffer로 반환한다.
+ * 이미지가 없으면 에러를 던진다.
+ */
+function extractImageBuffer(
+  result: { files?: Array<{ mediaType?: string; uint8Array: Uint8Array }> },
+  errorLabel: string
+): Buffer {
+  const imageFile = result.files?.find((f) => f.mediaType?.startsWith('image/'));
+  if (!imageFile) {
+    throw new Error(`${errorLabel} 응답에 이미지가 없습니다.`);
+  }
+  return Buffer.from(imageFile.uint8Array);
+}
+
 function extractJsonArray(raw: string): unknown {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = (fenced ? fenced[1] : raw).trim();
@@ -211,12 +226,7 @@ export async function generateReferenceImage(
     },
   });
 
-  const imageFile = result.files?.find((f) => f.mediaType?.startsWith('image/'));
-  if (!imageFile) {
-    throw new Error('reference 응답에 이미지가 없습니다.');
-  }
-
-  return Buffer.from(imageFile.uint8Array);
+  return extractImageBuffer(result, 'reference');
 }
 
 /**
@@ -251,10 +261,5 @@ export async function generateSceneImage(
     ],
   });
 
-  const imageFile = result.files?.find((f) => f.mediaType?.startsWith('image/'));
-  if (!imageFile) {
-    throw new Error(`장면 ${scene.idx} 응답에 이미지가 없습니다.`);
-  }
-
-  return Buffer.from(imageFile.uint8Array);
+  return extractImageBuffer(result, `장면 ${scene.idx}`);
 }
