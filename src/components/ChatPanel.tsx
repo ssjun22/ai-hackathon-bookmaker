@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Book } from "@/lib/types";
 import { getBookVisuals } from "@/lib/bookVisuals";
+import { useSpeechInput } from "@/hooks/useSpeechInput";
 
 // ── 타입 ────────────────────────────────────────────────────────────────────
 type QuizQuestion = {
@@ -261,6 +262,23 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [freeText, setFreeText] = useState("");
 
+  const {
+    isSupported: speechSupported,
+    isListening,
+    transcript,
+    start: startSpeech,
+    stop: stopSpeech,
+    reset: resetSpeech,
+    error: speechError,
+  } = useSpeechInput();
+
+  // 음성 인식 결과를 freeText에 누적
+  useEffect(() => {
+    if (!transcript) return;
+    setFreeText((prev) => (prev ? `${prev.trim()} ${transcript}` : transcript));
+    resetSpeech();
+  }, [transcript, resetSpeech]);
+
   const current = quizzes[currentIndex];
   const isLast = currentIndex === quizzes.length - 1;
   const canProceed =
@@ -274,6 +292,8 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
 
   function handleNext() {
     if (!canProceed) return;
+    if (isListening) stopSpeech();
+    resetSpeech();
     if (isLast) {
       onComplete();
     } else {
@@ -545,28 +565,94 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
               })}
             </div>
           ) : (
-            <textarea
-              value={freeText}
-              onChange={(e) => setFreeText(e.target.value)}
-              placeholder="여기에 자유롭게 답을 적어보세요"
-              aria-label="자유 답변"
-              rows={4}
-              className="w-full px-4 py-3 rounded-[var(--radius-clay-sm)] resize-none text-sm leading-relaxed"
-              style={{
-                background: "var(--color-beige-soft)",
-                color: "var(--color-brown)",
-                border: "2px solid transparent",
-                boxShadow: "var(--shadow-clay-sm) inset",
-                fontFamily: "inherit",
-                outline: "none",
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = accentBg;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = "transparent";
-              }}
-            />
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={freeText}
+                onChange={(e) => setFreeText(e.target.value)}
+                placeholder={
+                  isListening
+                    ? "듣고 있어요…"
+                    : "여기에 자유롭게 답을 적거나 마이크로 말해보세요"
+                }
+                aria-label="자유 답변"
+                rows={4}
+                className="w-full px-4 py-3 rounded-[var(--radius-clay-sm)] resize-none text-sm leading-relaxed"
+                style={{
+                  background: "var(--color-beige-soft)",
+                  color: "var(--color-brown)",
+                  border: "2px solid transparent",
+                  boxShadow: "var(--shadow-clay-sm) inset",
+                  fontFamily: "inherit",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = accentBg;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "transparent";
+                }}
+              />
+              {speechSupported && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => (isListening ? stopSpeech() : startSpeech())}
+                    aria-label={isListening ? "음성 입력 중지" : "음성으로 입력"}
+                    aria-pressed={isListening}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 flex-shrink-0"
+                    style={{
+                      background: isListening ? accentBg : "var(--color-card)",
+                      color: isListening ? accentColor : "var(--color-brown-soft)",
+                      boxShadow: "var(--shadow-clay-sm)",
+                      border: "var(--border-clay)",
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <rect
+                        x="9"
+                        y="3"
+                        width="6"
+                        height="11"
+                        rx="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill={isListening ? "currentColor" : "none"}
+                      />
+                      <path
+                        d="M5 11a7 7 0 0 0 14 0"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M12 18v3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                  <span
+                    className="text-xs"
+                    style={{
+                      color: isListening
+                        ? "var(--color-brown)"
+                        : "var(--color-brown-soft)",
+                    }}
+                  >
+                    {isListening
+                      ? "듣는 중… 다 말한 뒤 잠시 기다려주세요"
+                      : speechError === "not-allowed"
+                      ? "마이크 권한이 필요해요"
+                      : speechError === "no-speech"
+                      ? "들리지 않았어요. 다시 시도해보세요"
+                      : speechError
+                      ? "음성 인식에 실패했어요. 다시 시도해주세요"
+                      : "마이크를 눌러 말로 답할 수 있어요"}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
