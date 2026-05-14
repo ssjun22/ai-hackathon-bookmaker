@@ -64,11 +64,26 @@ const SCENES = [
 
 // ---------- reference 이미지 생성 ----------
 
+async function buildReferencePrompt(): Promise<string> {
+  const userVoices = CONVERSATION
+    .filter((t) => t.role === 'user')
+    .map((t) => `- ${t.text}`)
+    .join('\n');
+  return [
+    PROMPTS.systemTone,
+    `책 제목: ${BOOK.title} (${BOOK.author})`,
+    `독자 요청 요약:\n${userVoices}`,
+    '',
+    PROMPTS.reference,
+  ].join('\n');
+}
+
 async function generateReference(outDir: string): Promise<string> {
-  console.log('[poc-image] reference 이미지 생성 중...');
+  console.log(`[poc-image] reference 이미지 생성 중... (책: ${BOOK.title}, 대화 턴 수: ${CONVERSATION.length})`);
+  const prompt = await buildReferencePrompt();
   const result = await generateText({
     model: MODEL,
-    prompt: `${PROMPTS.systemTone}\n\n${PROMPTS.reference}`,
+    prompt,
   });
   const imageFile = result.files.find((f) => f.mediaType?.startsWith('image/'));
   if (!imageFile) {
