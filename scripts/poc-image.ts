@@ -1,6 +1,10 @@
-import 'dotenv/config';
-import fs from 'node:fs';
+import { config as loadDotenv } from 'dotenv';
 import path from 'node:path';
+import fs from 'node:fs';
+
+// .env.local 우선, 없으면 .env로 폴백 (Next.js 컨벤션과 일치)
+loadDotenv({ path: path.resolve(process.cwd(), '.env.local') });
+loadDotenv({ path: path.resolve(process.cwd(), '.env') });
 import { generateText } from 'ai';
 
 // ---------- 사용자 편집 영역 ----------
@@ -47,7 +51,7 @@ function requireEnv(): void {
   if (!process.env.AI_GATEWAY_API_KEY) {
     console.error('[poc-image] AI_GATEWAY_API_KEY 환경변수가 없습니다.');
     console.error('  1) https://vercel.com/ai/api-keys 에서 키 발급');
-    console.error('  2) 프로젝트 루트 .env.local 에 AI_GATEWAY_API_KEY=<키> 추가');
+    console.error('  2) 프로젝트 루트 .env.local (권장) 또는 .env 에 AI_GATEWAY_API_KEY=<키> 추가');
     console.error('  3) 다시 실행: pnpm tsx scripts/poc-image.ts');
     process.exit(1);
   }
