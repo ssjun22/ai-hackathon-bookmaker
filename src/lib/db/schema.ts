@@ -15,8 +15,7 @@ export const books = pgTable('books', {
 export const myBooks = pgTable('my_books', {
   id: uuid('id').primaryKey().defaultRandom(),
   storyTitle: text('story_title').notNull(),
-  coverEmoji: text('cover_emoji').notNull(),
-  colorPalette: text('color_palette').notNull(),
+  coverImageUrl: text('cover_image_url'),
   pages: jsonb('pages').$type<MyBookPage[]>().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -28,6 +27,17 @@ export const aiStoryPages = pgTable('ai_story_pages', {
   pages: jsonb('pages').$type<StoryPage[]>().notNull(),
 });
 
+// 원작별 사전 준비 캐릭터 reference 이미지
+export const bookCharacters = pgTable('book_characters', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  bookId: text('book_id').notNull().references(() => books.id),
+  name: text('name').notNull(),
+  appearance: text('appearance').notNull(),
+  refImageUrl: text('ref_image_url').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export type BooksTable = typeof books.$inferSelect;
 export type MyBooksTable = typeof myBooks.$inferSelect;
 export type AiStoryPagesTable = typeof aiStoryPages.$inferSelect;
+export type BookCharactersTable = typeof bookCharacters.$inferSelect;

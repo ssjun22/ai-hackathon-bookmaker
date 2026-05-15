@@ -1,29 +1,23 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import type { StoryPage } from "@/lib/types";
+import type { MyBook, StoryPage } from "@/lib/types";
 import ResultCarousel from "@/components/ResultCarousel";
 
 interface ResultPageProps {
   params: Promise<{ bookId: string }>;
 }
 
-type AiStoryPagesResponse = {
-  bookId: string;
-  storyTitle: string;
-  pages: StoryPage[];
-};
-
 export default function ResultPage({ params }: ResultPageProps) {
   const { bookId } = use(params);
-  const [data, setData] = useState<AiStoryPagesResponse | null | undefined>(undefined);
+  const [data, setData] = useState<MyBook | null | undefined>(undefined);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/ai-story-pages/${bookId}`);
+        const res = await fetch(`/api/my-books/${bookId}`);
         if (res.ok) {
-          const json: AiStoryPagesResponse = await res.json();
+          const json: MyBook = await res.json();
           setData(json);
         } else {
           setData(null);
@@ -72,6 +66,15 @@ export default function ResultPage({ params }: ResultPageProps) {
     );
   }
 
+  // MyBookPage[] → StoryPage[] 변환 (bodyCandidates 빈 배열 주입)
+  const mappedPages: StoryPage[] = data.pages.map((p) => ({
+    pageNumber: p.pageNumber,
+    title: p.title,
+    body: p.body,
+    imageUrl: p.imageUrl,
+    bodyCandidates: [],
+  }));
+
   return (
     <main
       style={{
@@ -79,7 +82,11 @@ export default function ResultPage({ params }: ResultPageProps) {
         backgroundColor: "var(--color-beige)",
       }}
     >
-      <ResultCarousel storyTitle={data.storyTitle} pages={data.pages} />
+      <ResultCarousel
+        storyTitle={data.storyTitle}
+        pages={mappedPages}
+        coverImageUrl={data.coverImageUrl}
+      />
     </main>
   );
 }

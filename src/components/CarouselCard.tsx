@@ -15,8 +15,6 @@ interface CarouselCardProps {
   isThisDirty: boolean;
   isThisRegen: boolean;
   displayBody: string;
-  displayPalette: string;
-  displayEmoji: string;
   cardState: EditState;
   aiCandidates: string[];
   cardRef: (el: HTMLDivElement | null) => void;
@@ -38,8 +36,6 @@ export default function CarouselCard({
   isThisDirty,
   isThisRegen,
   displayBody,
-  displayPalette,
-  displayEmoji,
   cardState,
   aiCandidates,
   cardRef,
@@ -56,6 +52,7 @@ export default function CarouselCard({
   const opacity = isActive ? 1 : distance === 1 ? 0.5 : 0.18;
   const blur = isActive ? 0 : distance === 1 ? 2.5 : 5;
   const zIndex = 10 - distance;
+  const isCover = page.kind === "cover";
 
   return (
     <motion.div
@@ -113,17 +110,20 @@ export default function CarouselCard({
           backgroundColor: "var(--color-card)",
         }}
       >
-        {/* 이미지 영역 */}
+        {/* 이미지 영역 — 표지일 땐 일반 카드 전체 높이와 비슷하게 늘리고 비율 유지(contain) */}
         <div style={{ position: "relative" }}>
           <div
             style={{
-              backgroundColor: displayPalette,
-              aspectRatio: isThisEditing ? "3 / 2" : "3 / 4",
+              aspectRatio: isCover
+                ? "3 / 5"
+                : isThisEditing
+                  ? "3 / 2"
+                  : "3 / 4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: isThisEditing ? 72 : 96,
-              transition: "background-color 0.4s ease",
+              overflow: "hidden",
+              backgroundColor: isCover ? "var(--color-card)" : "#f1f5f9",
             }}
             aria-hidden="true"
           >
@@ -140,8 +140,8 @@ export default function CarouselCard({
                   style={{
                     width: 36,
                     height: 36,
-                    border: "3px solid rgba(255,255,255,0.3)",
-                    borderTop: "3px solid #fff",
+                    border: "3px solid rgba(100,100,100,0.2)",
+                    borderTop: "3px solid #888",
                     borderRadius: "50%",
                     animation: "spin 0.8s linear infinite",
                   }}
@@ -149,15 +149,30 @@ export default function CarouselCard({
                 <p
                   style={{
                     fontSize: 12,
-                    color: "rgba(255,255,255,0.9)",
+                    color: "rgba(80,80,80,0.9)",
                     fontWeight: 600,
                   }}
                 >
                   이미지 재생성 중...
                 </p>
               </div>
+            ) : page.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={page.imageUrl}
+                alt={isCover ? `${page.title} 표지 이미지` : `${page.title} 장면 이미지`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: isCover ? "contain" : "cover",
+                  objectPosition: "center",
+                }}
+              />
             ) : (
-              displayEmoji
+              // fallback: 단색 배경 + 책 아이콘
+              <span style={{ fontSize: isThisEditing ? 56 : 72, lineHeight: 1 }} aria-hidden="true">
+                📖
+              </span>
             )}
           </div>
 
@@ -179,134 +194,103 @@ export default function CarouselCard({
             </div>
           )}
 
-          {isActive && !isThisEditing && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleEdit(pageIndex);
-              }}
-              disabled={isThisRegen}
-              aria-label="이 페이지 편집하기"
-              className="edit-toggle-btn"
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                padding: "6px 12px",
-                borderRadius: 16,
-                border: "1.5px solid var(--color-brown)",
-                backgroundColor: "var(--color-card)",
-                color: "var(--color-brown)",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: isThisRegen ? "not-allowed" : "pointer",
-                lineHeight: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "var(--shadow-clay-sm)",
-                zIndex: 5,
-              }}
-            >
-              내가 써볼래!
-            </button>
-          )}
         </div>
 
-        {/* 텍스트 영역 */}
-        <div
-          style={{
-            padding: "14px 16px 16px",
-            display: "flex",
-            flexDirection: "column",
-            gap: isThisEditing ? 10 : 6,
-            position: "relative",
-          }}
-        >
-          {isActive && isThisEditing && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleEdit(pageIndex);
-              }}
-              disabled={isThisRegen}
-              aria-label="편집 영역 접기"
-              className="edit-toggle-btn is-editing"
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                width: 30,
-                height: 30,
-                padding: 0,
-                borderRadius: "50%",
-                border: "1.5px solid var(--color-brown)",
-                backgroundColor: "var(--color-card)",
-                color: "var(--color-brown)",
-                cursor: isThisRegen ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "var(--shadow-clay-sm)",
-                zIndex: 5,
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m18 15-6-6-6 6" />
-              </svg>
-            </button>
-          )}
-
-          <p
-            className="font-display"
+        {/* 텍스트 영역 — 표지 카드는 이미지 안에 제목이 그려져 있어 텍스트 영역 자체를 생략 */}
+        {!isCover && (
+          <div
             style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--color-brown-soft)",
-              lineHeight: 1.2,
-              paddingRight: isActive && isThisEditing ? 44 : 0,
+              padding: "14px 16px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: isThisEditing ? 10 : 6,
+              position: "relative",
             }}
           >
-            {page.pageNumber}. {page.title}
-          </p>
+            {isActive && isThisEditing && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleEdit(pageIndex);
+                }}
+                disabled={isThisRegen}
+                aria-label="편집 영역 접기"
+                className="edit-toggle-btn is-editing"
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  width: 30,
+                  height: 30,
+                  padding: 0,
+                  borderRadius: "50%",
+                  border: "1.5px solid var(--color-brown)",
+                  backgroundColor: "var(--color-card)",
+                  color: "var(--color-brown)",
+                  cursor: isThisRegen ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "var(--shadow-clay-sm)",
+                  zIndex: 5,
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m18 15-6-6-6 6" />
+                </svg>
+              </button>
+            )}
 
-          {isThisEditing ? (
-            <CardEditPanel
-              pageIndex={pageIndex}
-              originalBody={page.body}
-              aiCandidates={aiCandidates}
-              cardState={cardState}
-              displayBody={displayBody}
-              onUpdateCustomInput={onUpdateCustomInput}
-              onPickCandidate={onPickCandidate}
-              onResetBody={onResetBody}
-              disabled={isThisRegen}
-            />
-          ) : (
             <p
+              className="font-display"
               style={{
                 fontSize: 13,
-                color: "var(--color-brown)",
-                lineHeight: 1.55,
-                fontFamily: "var(--font-body)",
+                fontWeight: 700,
+                color: "var(--color-brown-soft)",
+                lineHeight: 1.2,
+                paddingRight: isActive && isThisEditing ? 44 : 0,
               }}
             >
-              {displayBody}
+              {page.pageNumber}. {page.title}
             </p>
-          )}
-        </div>
+
+            {isThisEditing ? (
+              <CardEditPanel
+                pageIndex={pageIndex}
+                originalBody={page.body}
+                aiCandidates={aiCandidates}
+                cardState={cardState}
+                displayBody={displayBody}
+                onUpdateCustomInput={onUpdateCustomInput}
+                onPickCandidate={onPickCandidate}
+                onResetBody={onResetBody}
+                disabled={isThisRegen}
+              />
+            ) : (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--color-brown)",
+                  lineHeight: 1.55,
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {displayBody}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );

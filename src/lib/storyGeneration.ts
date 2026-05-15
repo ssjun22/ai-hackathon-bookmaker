@@ -1,0 +1,464 @@
+import "server-only";
+
+import { generateText } from "ai";
+import { google } from "@ai-sdk/google";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { bookCharacters } from "@/lib/db/schema";
+import { uploadBookImage } from "@/lib/supabaseStorage";
+import type { ChatAnswer } from "@/lib/types";
+
+// @ai-sdk/google 은 GOOGLE_GENERATIVE_AI_API_KEY 를 읽음.
+// .env.local 에 GOOGLE_API_KEY 만 있는 경우 자동 매핑.
+if (process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_API_KEY;
+}
+
+// ── 타입 ──────────────────────────────────────────────────────────────────────
+
+export type Scene = {
+  idx: number;
+  title: string;
+  body: string;
+};
+
+export type BookTextResult = {
+  storyTitle: string;
+  scenes: Scene[];
+};
+
+// ── 정적 책 메타 ───────────────────────────────────────────────────────────────
+
+const BOOK_META: Record<
+  string,
+  { title: string; author: string; summary: string }
+> = {
+  star: {
+    title: "냄새 맡은 값",
+    author: "전래동화",
+    summary:
+      '장터에서 풍겨오는 국밥 냄새를 공짜로 맡은 사내를 주막 주인이 고소했지만, 원님은 "냄새 맡은 값은 돈 소리로 내면 된다"는 명쾌한 판결을 내린다. 지혜로운 해결로 욕심을 꼬집는 이야기.',
+  },
+  forest: {
+    title: "소금을 만드는 맷돌",
+    author: "전래동화",
+    summary:
+      "소금을 무한정 만드는 마법 맷돌을 훔친 선장이 멈추는 주문을 몰라 배 안에서 소금을 계속 만들다 배가 가라앉아 버린다. 욕심의 결말을 담은 이야기.",
+  },
+  rabbit: {
+    title: "송아지와 바꾼 무",
+    author: "전래동화",
+    summary:
+      '마음씨 좋은 농부가 커다란 무를 원님께 정성껏 선물하자 원님은 기뻐하며 말 한 필을 내려줍니다. 이 소식을 들은 욕심쟁이 부자가 비단을 갖다 바쳤더니 원님은 "마침 좋은 것이 생겼소"라며 농부에게 받은 무를 돌려줍니다. 진심 어린 마음이 가장 값진 선물임을 깨닫게 해 주는 이야기.',
+  },
+  brave: {
+    title: "소금장수와 기름장수",
+    author: "전래동화",
+    summary:
+      "좁은 다리에서 소금짐과 기름짐을 진 두 사람이 마주쳤을 때, 지나가던 노인의 지혜로운 조언 덕분에 서로 양보하며 모두 무사히 건너간다. 양보와 배려의 지혜를 담은 이야기.",
+  },
+};
+
+const FALLBACK_BOOK_META = {
+  title: "전래동화",
+  author: "전래동화",
+  summary: "우리나라 옛날이야기",
+};
+
+// ── 상수 ──────────────────────────────────────────────────────────────────────
+
+const TEXT_MODEL = google("gemini-3.1-flash-lite-preview");
+const IMAGE_MODEL = google("gemini-3.1-flash-image-preview");
+const IMAGE_SIZE = "512" as const;
+const ASPECT_RATIO = "2:3";
+
+/** reference 이미지 최대 개수 — 과도한 컨텍스트 방지 */
+const MAX_REFS = 5;
+
+const SYSTEM_PROMPT = `당신은 한국 전래동화를 아이의 취향에 맞춰 새로 쓰는 작가입니다.
+
+규칙:
+- 한국어로 작성
+- 각 장면 본문은 1-2문장, 40-60자 정도의 짧고 운율감 있는 동화책 톤
+- 따뜻하고 평화로운 분위기 유지 (폭력/공포/자극 없음)
+- 아이의 답변 내용(보라색 호박, 따뜻한 시골 풍경 등)을 자연스럽게 반영
+- 장면 사이 흐름이 자연스럽게 이어져야 함 (특히 장면 3과 장면 4는 시간·공간·인과가 끊기지 않는 같은 사건의 흐름)
+- 마지막 장면은 동화의 결말(여운/교훈)로 마무리
+
+인물 묘사 규칙 (중요 — 이 본문은 그대로 이미지 생성 모델에 입력됩니다):
+- 등장 인물은 "착한 농부", "욕심쟁이 농부", "사또" 등 원작의 호칭을 사용해 본문에서 명확히 호명합니다.
+- "그", "그녀", "이 사람", "그 사람" 같은 대명사 단독 사용 금지. 인물은 항상 호칭으로 지칭해 누가 누구인지 절대 헷갈리지 않게 작성합니다.
+- 한 장면에 두 인물이 등장하면 둘 모두 호칭으로 명시합니다 (예: "착한 농부가 사또에게 무를 건네자, 사또는 ...").
+- 본문에 누가 어떤 행동을 하는지 한 문장 안에 분명히 드러나도록 합니다 — 이미지 생성기는 본문 외 정보를 모릅니다.
+
+출력은 반드시 JSON 배열이어야 하며, 각 항목은 { "idx": number, "title": string, "body": string } 형식입니다.
+title은 8자 이내의 장면 제목, body는 본문입니다.
+JSON 외 다른 텍스트는 출력하지 마세요. 코드블록 마크다운(\`\`\`)도 사용하지 마세요.`;
+
+const DEFAULT_SCENE_FRAMES = [
+  { idx: 1, frame: "원작의 핵심 사건을 동화책 첫 장면으로 소개. 주요 인물을 호칭으로 등장시킴." },
+  { idx: 2, frame: "갈등이나 전환점이 드러나는 장면. 인물 간 상호작용을 호칭으로 명시." },
+  {
+    idx: 3,
+    frame:
+      "(원문 결말 이후 자유 내용) 장면 2의 결과로 이어지는 직접적 후속 사건. 같은 인물군이 등장하며, 누가 무엇을 했는지 호칭으로 명시. 장면 4와 한 사건의 흐름으로 연결.",
+  },
+  {
+    idx: 4,
+    frame:
+      "(원문 결말 이후 자유 내용) 장면 3의 직접적 후속이자 동화의 결말. 장면 3에서 등장한 인물이 어떻게 마무리되는지 호칭과 함께 분명히 묘사. 시간/장소의 비약 없이 자연스럽게 마무리.",
+  },
+];
+
+export type SceneFrame = {
+  idx: number;
+  frame: string;
+  /**
+   * 이 장면에 ref 이미지를 입력할 캐릭터 이름들 (book_characters.name 과 매칭).
+   * 비어 있으면 모든 ref 이미지를 입력한다.
+   */
+  characters?: string[];
+};
+type SceneFrameBuilder = (answers: ChatAnswer[]) => SceneFrame[];
+
+function findAnswer(answers: ChatAnswer[], questionId: string, fallback: string): string {
+  const found = answers.find((a) => a.questionId === questionId)?.answer?.trim();
+  return found && found.length > 0 ? found : fallback;
+}
+
+// 책별 장면 틀 오버라이드. 명시되지 않은 책은 DEFAULT_SCENE_FRAMES 사용.
+// rabbit 은 채팅 답변을 frame 텍스트에 직접 주입해 사물·감정·결말이 답변에 따라 달라지도록 한다.
+const SCENE_FRAMES_BY_BOOK: Record<string, SceneFrameBuilder> = {
+  rabbit: (answers) => {
+    const a1 = findAnswer(answers, "rabbit-1", "송아지"); // 사또가 착한 농부에게 답례한 것
+    const a2 = findAnswer(answers, "rabbit-2", "커다란 무"); // 사또가 욕심쟁이에게 답례한 것
+    const a3 = findAnswer(answers, "rabbit-3", "욕심을 돌아보길 바라는 마음"); // 사또의 속마음
+    const a4 = findAnswer(answers, "rabbit-4", "당황한 표정"); // 욕심쟁이의 표정
+    const a5 = findAnswer(answers, "rabbit-5", "그것을 어떻게 쓸지 곰곰이 생각"); // 욕심쟁이가 받은 것으로 하고 싶은 일
+
+    return [
+      {
+        idx: 1,
+        frame: `착한 농부가 커다란 무를 사또에게 선물하고, 사또는 답례로 "${a1}"을(를) 주는 장면. '착한 농부'와 '사또'를 호칭으로 명시하고, 답례 사물 "${a1}"이 장면에 분명히 등장하도록 묘사.`,
+        characters: ["정직한 농부", "사또"],
+      },
+      {
+        idx: 2,
+        frame:
+          '본문에 다음 문장을 거의 그대로 사용: "이 이야기를 들은 욕심쟁이 농부는 샘이 나서 씩씩거렸습니다." 운율감을 위한 미세 조정만 허용하며, \'욕심쟁이 농부\' 호칭은 반드시 유지.',
+        characters: ["욕심쟁이 농부"],
+      },
+      {
+        idx: 3,
+        frame: `욕심쟁이 농부가 송아지를 사또에게 선물하고, 사또는 답례로 "${a2}"을(를) 주는 장면. 이때 사또의 속마음은 "${a3}"이고, 그것을 받은 욕심쟁이 농부의 표정은 "${a4}"임을 자연스럽게 본문에 반영. 두 인물 모두 호칭으로 명시.`,
+        characters: ["욕심쟁이 농부", "사또"],
+      },
+      {
+        idx: 4,
+        frame: `(원문 결말 이후 자유 내용) 사또에게서 "${a2}"을(를) 받은 욕심쟁이 농부가 그것으로 "${a5}"을(를) 시도하는 장면. 호칭으로 인물 명시, 장면 5와 한 사건의 흐름으로 연결.`,
+        characters: ["욕심쟁이 농부"],
+      },
+      {
+        idx: 5,
+        frame: `(원문 결말 이후 자유 내용) 장면 4에서 욕심쟁이 농부가 "${a5}"을(를) 시도한 결과가 어떻게 마무리되는지 동화의 결말로 그리기. 시간/장소의 비약 없이 자연스럽게 이어지고, 욕심에 대한 따뜻한 깨달음 또는 여운으로 마무리.`,
+        characters: ["욕심쟁이 농부"],
+      },
+    ];
+  },
+};
+
+export function getSceneFrames(bookId: string, answers: ChatAnswer[]): SceneFrame[] {
+  const builder = SCENE_FRAMES_BY_BOOK[bookId];
+  return builder ? builder(answers) : DEFAULT_SCENE_FRAMES;
+}
+
+const IMAGE_SYSTEM_TONE = [
+  "한국 전래동화 그림책 스타일. 따뜻한 수채화 느낌. 부드러운 색감. 아이가 보기 편한 일러스트. 폭력/공포 없음.",
+  "한 이미지에는 한 장면, 한 순간만 그립니다. 분할 컷·만화 스트립·여러 패널·좌우 분할 금지.",
+  "이미지 안에 글자(한글/영문 텍스트 오버레이, 말풍선, 제목, 캡션) 넣지 않습니다.",
+].join("\n");
+
+const SCENE_GUIDE =
+  "본문에 여러 행동/시간이 등장해도 가장 결정적인 한 순간만 골라 단일 장면으로 그립니다. 절대 두 장면을 한 그림에 같이 담지 마세요.";
+
+// ── 내부 유틸 ─────────────────────────────────────────────────────────────────
+
+/**
+ * generateText 응답에서 첫 번째 이미지 파일을 찾아 Buffer로 반환한다.
+ * 이미지가 없으면 에러를 던진다.
+ */
+function extractImageBuffer(
+  result: { files?: Array<{ mediaType?: string; uint8Array: Uint8Array }> },
+  errorLabel: string,
+): Buffer {
+  const imageFile = result.files?.find((f) =>
+    f.mediaType?.startsWith("image/"),
+  );
+  if (!imageFile) {
+    throw new Error(`${errorLabel} 응답에 이미지가 없습니다.`);
+  }
+  return Buffer.from(imageFile.uint8Array);
+}
+
+/**
+ * ref 이미지 Buffer[]와 텍스트 프롬프트를 IMAGE_MODEL에 전달하여 생성된 이미지를 Buffer로 반환한다.
+ * generateSceneImage / generateCoverImage 의 공통 호출 패턴을 추출.
+ */
+async function callImageModel(
+  textPrompt: string,
+  refBuffers: Buffer[],
+  errorLabel: string,
+): Promise<Buffer> {
+  const imageContents = refBuffers.map((buf) => ({
+    type: "image" as const,
+    image: buf,
+  }));
+
+  const result = await generateText({
+    model: IMAGE_MODEL,
+    maxRetries: 0,
+    providerOptions: {
+      google: {
+        responseModalities: ["IMAGE"],
+        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
+      },
+    },
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: textPrompt },
+          ...imageContents,
+        ],
+      },
+    ],
+  });
+
+  return extractImageBuffer(result, errorLabel);
+}
+
+function extractJsonArray(raw: string): unknown {
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = (fenced ? fenced[1] : raw).trim();
+  const start = candidate.indexOf("[");
+  const end = candidate.lastIndexOf("]");
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error(`응답에서 JSON 배열을 찾을 수 없습니다.\n원본:\n${raw}`);
+  }
+  return JSON.parse(candidate.slice(start, end + 1));
+}
+
+function validateScenes(parsed: unknown): Scene[] {
+  if (!Array.isArray(parsed)) throw new Error("JSON 루트가 배열이 아닙니다.");
+  return parsed.map((item, i) => {
+    if (typeof item !== "object" || item === null)
+      throw new Error(`항목 ${i}이 객체가 아닙니다.`);
+    const o = item as Record<string, unknown>;
+    if (
+      typeof o.idx !== "number" ||
+      typeof o.title !== "string" ||
+      typeof o.body !== "string"
+    )
+      throw new Error(`항목 ${i} 스키마 불일치: ${JSON.stringify(item)}`);
+    return {
+      idx: o.idx as number,
+      title: o.title as string,
+      body: o.body as string,
+    };
+  });
+}
+
+function buildUserPrompt(
+  bookId: string,
+  book: { title: string; author: string; summary: string },
+  answers: ChatAnswer[],
+): string {
+  const conv = answers
+    .map((a) => `[AI] ${a.question}\n[아이] ${a.answer}`)
+    .join("\n");
+
+  const sceneFrames = getSceneFrames(bookId, answers);
+  const frames = sceneFrames
+    .map((s) => `- 장면${s.idx}: ${s.frame}`)
+    .join("\n");
+
+  return [
+    `책 제목: ${book.title} (${book.author})`,
+    `원작 줄거리: ${book.summary}`,
+    "",
+    "아이와 나눈 대화 (이 내용을 본문에 반영):",
+    conv,
+    "",
+    `장면 ${sceneFrames.length}개의 틀:`,
+    frames,
+    "",
+    `위 틀에 따라 ${sceneFrames.length}개 장면을 JSON 배열로 작성해주세요.`,
+  ].join("\n");
+}
+
+// ── 공개 함수 ─────────────────────────────────────────────────────────────────
+
+/**
+ * bookId와 채팅 답변을 받아 LLM으로 동화 텍스트(Scene[])를 생성한다.
+ */
+export async function generateBookText(
+  bookId: string,
+  answers: ChatAnswer[],
+): Promise<BookTextResult> {
+  const book = BOOK_META[bookId] ?? FALLBACK_BOOK_META;
+
+  const result = await generateText({
+    model: TEXT_MODEL,
+    maxRetries: 0,
+    system: SYSTEM_PROMPT,
+    prompt: buildUserPrompt(bookId, book, answers),
+  });
+
+  const parsed = extractJsonArray(result.text);
+  const scenes = validateScenes(parsed);
+
+  return {
+    storyTitle: book.title,
+    scenes,
+  };
+}
+
+/**
+ * scenes를 바탕으로 reference 이미지 1장을 생성하여 Buffer로 반환한다.
+ */
+export async function generateReferenceImage(
+  bookId: string,
+  answers: ChatAnswer[],
+): Promise<Buffer> {
+  const book = BOOK_META[bookId] ?? FALLBACK_BOOK_META;
+  const userVoices = answers.map((a) => `- ${a.answer}`).join("\n");
+
+  const prompt = [
+    IMAGE_SYSTEM_TONE,
+    `책 제목: ${book.title} (${book.author})`,
+    `독자 요청 요약:\n${userVoices}`,
+    "",
+    `한국 전래동화 그림책 스타일 ... 따뜻하고 둥근 인상의 주인공, 부드러운 미소, 한복 또는 옛 복장, 정면 클로즈업, 단순한 배경, 따뜻한 파스텔 톤.`,
+  ].join("\n");
+
+  const result = await generateText({
+    model: IMAGE_MODEL,
+    maxRetries: 0,
+    prompt,
+    providerOptions: {
+      google: {
+        responseModalities: ["IMAGE"],
+        imageConfig: { imageSize: IMAGE_SIZE, aspectRatio: ASPECT_RATIO },
+      },
+    },
+  });
+
+  return extractImageBuffer(result, "reference");
+}
+
+/**
+ * bookId로 book_characters 테이블을 조회하여 ref 이미지 Buffer[]를 반환한다.
+ * 사전 준비된 캐릭터가 없으면 LLM으로 생성 후 Storage 업로드 + DB insert.
+ * MAX_REFS(5) 초과분은 잘라낸다.
+ */
+export async function resolveCharacterReferences(
+  bookId: string,
+  answers: ChatAnswer[],
+): Promise<{
+  buffers: Buffer[];
+  refImageUrls: string[];
+  names: string[];
+  byName: Record<string, Buffer>;
+}> {
+  const rows = await db
+    .select()
+    .from(bookCharacters)
+    .where(eq(bookCharacters.bookId, bookId));
+
+  let entries: Array<{ name: string; refImageUrl: string }>;
+
+  if (rows.length > 0) {
+    // 사전 준비된 캐릭터 ref 사용
+    entries = rows
+      .slice(0, MAX_REFS)
+      .map((r) => ({ name: r.name, refImageUrl: r.refImageUrl }));
+  } else {
+    // fallback: LLM으로 ref 생성 → Storage 업로드 → DB insert
+    const buffer = await generateReferenceImage(bookId, answers);
+    const url = await uploadBookImage(
+      buffer,
+      `ref-${bookId}-${Date.now()}.png`,
+      "image/png",
+    );
+
+    await db.insert(bookCharacters).values({
+      bookId,
+      name: "main",
+      appearance: "auto-generated",
+      refImageUrl: url,
+    });
+
+    entries = [{ name: "main", refImageUrl: url }];
+  }
+
+  // public URL → Buffer 변환
+  const buffers: Buffer[] = await Promise.all(
+    entries.map(async ({ refImageUrl }) => {
+      const res = await fetch(refImageUrl);
+      const ab = await res.arrayBuffer();
+      return Buffer.from(ab);
+    }),
+  );
+
+  const byName: Record<string, Buffer> = {};
+  entries.forEach(({ name }, i) => {
+    byName[name] = buffers[i];
+  });
+
+  const refImageUrls = entries.map((e) => e.refImageUrl);
+  const names = entries.map((e) => e.name);
+  return { buffers, refImageUrls, names, byName };
+}
+
+/**
+ * 단일 Scene과 복수 reference Buffer를 받아 장면 이미지를 생성하여 Buffer로 반환한다.
+ */
+export async function generateSceneImage(
+  scene: Scene,
+  refBuffers: Buffer[],
+): Promise<Buffer> {
+  const sceneText = `장면 ${scene.idx} — ${scene.title}: ${scene.body}`;
+  const prompt = `${IMAGE_SYSTEM_TONE}\n\n${SCENE_GUIDE}\n\n위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지하면서 다음 장면을 그려줘:\n${sceneText}`;
+  return callImageModel(prompt, refBuffers, `장면 ${scene.idx}`);
+}
+
+/**
+ * 표지 이미지를 생성하여 Buffer로 반환한다.
+ * storyTitle + storySummary + 캐릭터 ref 이미지를 모두 입력.
+ */
+export async function generateCoverImage(
+  storyTitle: string,
+  storySummary: string,
+  refBuffers: Buffer[],
+  characterNames: string[] = [],
+): Promise<Buffer> {
+  const charsLine =
+    characterNames.length > 0
+      ? `등장 인물(아래 참조 이미지 순서와 동일): ${characterNames.join(
+          ", ",
+        )}. 표지에 이 ${characterNames.length}명이 모두 함께 등장해야 하며, 한 명이라도 누락되면 안 됩니다. 각 인물의 참조 이미지 외형을 그대로 유지하고, 호칭에 맞는 자세·표정으로 자연스럽게 한 화면에 배치해주세요.`
+      : "위 참조 이미지의 캐릭터 외형과 그림체를 그대로 유지해주세요.";
+
+  const coverPrompt = [
+    IMAGE_SYSTEM_TONE,
+    "이 이미지는 동화책 표지입니다. 제목과 주인공이 인상적으로 담긴 표지 일러스트를 그려주세요.",
+    `동화 제목: ${storyTitle}`,
+    `줄거리 분위기: ${storySummary}`,
+    charsLine,
+    "따뜻하고 밝은 표지 구도. 단일 장면, 분할 컷 금지.",
+    `제목 텍스트 배치: 한국어로 "${storyTitle}" 제목을 이미지 상단(top)에 가로 중앙정렬(horizontally centered)로 크고 또렷하게 표기하세요. 제목은 캐릭터·배경과 겹치지 않게 상단 여백 안에 배치하고, 가독성 좋은 동화책 표지 서체로 표현해주세요.`,
+    `부가 텍스트 배치: 이미지의 우측 하단(bottom-right)에 제목보다 훨씬 작은 크기로 한국어 "엮은이"와 "김대교"를 두 줄로 표기하세요. 첫 줄 "엮은이", 두 번째 줄 "김대교"가 우측 정렬(right-aligned)되어 나란히 표시되도록 합니다. 제목보다 작고 은은하게, 표지의 디자인을 해치지 않는 톤으로 그려주세요. 위 두 텍스트(제목, 엮은이 김대교) 외 다른 글자는 절대 넣지 마세요.`,
+  ].join("\n");
+
+  return callImageModel(coverPrompt, refBuffers, "표지");
+}

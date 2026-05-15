@@ -18,36 +18,16 @@ import CarouselIndicator from "./CarouselIndicator";
 interface ResultCarouselProps {
   storyTitle: string;
   pages: StoryPage[];
+  coverImageUrl?: string;
+  showSave?: boolean;
 }
 
 const SWIPE_THRESHOLD_PX = 60;
 const SWIPE_VELOCITY = 400;
 
-const REGEN_PALETTES = [
-  "#E07A5F", "#3D405B", "#81B29A", "#F2CC8F",
-  "#118AB2", "#06D6A0", "#FFD166", "#EF476F",
-];
-const REGEN_EMOJIS = [
-  "✨", "🌈", "🎨", "🌸", "🍀", "🦋", "🎭", "🌟",
-  "🎪", "🌺", "🦄", "🎠", "🌻", "🎋", "🍁",
-];
-
-function nextPalette(current: string): string {
-  const idx = REGEN_PALETTES.indexOf(current);
-  return REGEN_PALETTES[(idx + 1) % REGEN_PALETTES.length];
-}
-
-function nextEmoji(current: string): string {
-  const idx = REGEN_EMOJIS.indexOf(current);
-  if (idx < 0) return REGEN_EMOJIS[0];
-  return REGEN_EMOJIS[(idx + 1) % REGEN_EMOJIS.length];
-}
-
 export type EditState = {
   body: string;          // 칩(원래·AI) 선택 결과 — textarea가 비어있을 때 사용
   customInput: string;   // textarea 직접 입력값 (초기 빈 문자열)
-  colorPalette: string;
-  emoji: string;
   dirty: boolean;
   regenerating: boolean;
   isEditing: boolean;
@@ -58,7 +38,7 @@ export function effectiveBody(s: EditState): string {
   return s.customInput.trim().length > 0 ? s.customInput : s.body;
 }
 
-export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProps) {
+export default function ResultCarousel({ storyTitle, pages, coverImageUrl, showSave = true }: ResultCarouselProps) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -69,8 +49,6 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
     pages.map((p) => ({
       body: p.body,
       customInput: "",
-      colorPalette: p.colorPalette,
-      emoji: p.emoji,
       dirty: false,
       regenerating: false,
       isEditing: false,
@@ -156,54 +134,14 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
     );
   }, []);
 
-  const regenDirty = useCallback(async () => {
-    let dirtyIndices: number[] = [];
-    setEditStates((prev) => {
-      dirtyIndices = prev.map((s, i) => (s.dirty ? i : -1)).filter((i) => i >= 0);
-      if (dirtyIndices.length === 0) return prev;
-      const next = prev.map((s, i) =>
-        dirtyIndices.includes(i) ? { ...s, regenerating: true } : s
-      );
-      editStatesRef.current = next;
-      return next;
-    });
-
-    if (dirtyIndices.length === 0) return;
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setEditStates((prev) => {
-      const next = prev.map((s, i) =>
-        dirtyIndices.includes(i)
-          ? {
-              ...s,
-              regenerating: false,
-              dirty: false,
-              colorPalette: nextPalette(s.colorPalette),
-              emoji: nextEmoji(s.emoji),
-            }
-          : s
-      );
-      editStatesRef.current = next;
-      return next;
-    });
-  }, []);
-
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const hasDirtyNow = editStatesRef.current.some((s) => s.dirty);
-      if (hasDirtyNow) {
-        await regenDirty();
-      }
-
       const latest = editStatesRef.current;
       const savedPages: MyBookPage[] = pages.map((p, i) => ({
         pageNumber: p.pageNumber,
         title: p.title,
         body: effectiveBody(latest[i]),
-        colorPalette: latest[i].colorPalette,
-        emoji: latest[i].emoji,
         imageUrl: p.imageUrl,
       }));
 
@@ -212,8 +150,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storyTitle,
-          coverEmoji: latest[0]?.emoji ?? "📖",
-          colorPalette: latest[0]?.colorPalette ?? "#D9BC3E",
+          ...(coverImageUrl ? { coverImageUrl } : {}),
           pages: savedPages,
         }),
       });
@@ -229,7 +166,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
     } finally {
       setIsSaving(false);
     }
-  }, [pages, storyTitle, regenDirty, router]);
+  }, [pages, storyTitle, coverImageUrl, router]);
 
   const isRegenerating = editStates.some((s) => s.regenerating);
 
@@ -355,8 +292,6 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
               isThisDirty={cardState.dirty}
               isThisRegen={cardState.regenerating}
               displayBody={effectiveBody(cardState)}
-              displayPalette={cardState.colorPalette}
-              displayEmoji={cardState.emoji}
               cardState={cardState}
               aiCandidates={aiCandidatesByPage[idx]}
               cardRef={(el) => { cardRefs.current[idx] = el; }}
@@ -380,6 +315,7 @@ export default function ResultCarousel({ storyTitle, pages }: ResultCarouselProp
           isLastCard={isLastCard}
           isSaving={isSaving}
           isRegenerating={isRegenerating}
+          showSave={showSave}
           onPrev={goPrev}
           onNext={goNext}
           onSave={handleSave}

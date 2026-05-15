@@ -23,20 +23,19 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as {
       storyTitle: string;
-      coverEmoji: string;
-      colorPalette: string;
+      coverImageUrl?: string;
       pages: MyBookPage[];
     };
 
-    const { storyTitle, coverEmoji, colorPalette, pages } = body;
+    const { storyTitle, coverImageUrl, pages } = body;
 
-    if (!storyTitle || !coverEmoji || !colorPalette || !Array.isArray(pages)) {
+    if (!storyTitle || !Array.isArray(pages)) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
     const result = await db
       .insert(myBooks)
-      .values({ storyTitle, coverEmoji, colorPalette, pages })
+      .values({ storyTitle, coverImageUrl, pages })
       .returning({ id: myBooks.id });
 
     return NextResponse.json({ id: result[0].id }, { status: 201 });

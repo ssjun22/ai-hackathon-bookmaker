@@ -66,7 +66,7 @@ export default function LoadingModal({ open }: LoadingModalProps) {
               position: "fixed",
               inset: 0,
               backgroundColor: "rgba(30,20,10,0.70)",
-              zIndex: 60,
+              zIndex: 110,
             }}
           />
 
@@ -75,7 +75,7 @@ export default function LoadingModal({ open }: LoadingModalProps) {
             style={{
               position: "fixed",
               inset: 0,
-              zIndex: 61,
+              zIndex: 111,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
