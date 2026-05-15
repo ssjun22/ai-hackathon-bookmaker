@@ -51,10 +51,11 @@ export default function FriendBookCard({
         }}
       >
         <SmallBookCover
+          imageUrl={friend.imageUrl}
           emoji={friend.coverEmoji}
           colorPalette={friend.colorPalette}
-          width={134}
-          height={176}
+          width={110}
+          height={144}
         />
 
         {/* 내가 남긴 반응 뱃지 */}
@@ -84,28 +85,9 @@ export default function FriendBookCard({
 
       <p
         style={{
-          width: 138,
-          fontFamily: "var(--font-display)",
-          fontSize: 15,
-          fontWeight: 700,
-          color: "var(--color-brown)",
-          lineHeight: 1.3,
-          textAlign: "center",
-          wordBreak: "keep-all",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}
-      >
-        {friend.title}
-      </p>
-      <p
-        style={{
           fontSize: 13,
           color: "var(--color-brown-soft)",
           fontFamily: "var(--font-body)",
-          marginTop: -4,
         }}
       >
         {friend.authorName}

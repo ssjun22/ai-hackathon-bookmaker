@@ -102,7 +102,7 @@ export default function CreatePage() {
       }
 
       const data = await res.json() as { id: string };
-      router.push(`/create/result/${data.id}`);
+      router.push(`/my-library/${data.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했어요.";
       setIsLoading(false);

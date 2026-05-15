@@ -7,6 +7,7 @@ export type FriendBook = {
   authorName: string;
   coverEmoji: string;
   colorPalette: string;
+  imageUrl?: string;
 };
 
 export const mockFriendBooks: FriendBook[] = [
@@ -16,6 +17,7 @@ export const mockFriendBooks: FriendBook[] = [
     authorName: "지우",
     coverEmoji: "🥕",
     colorPalette: "#F4A261",
+    imageUrl: "/friends/f1.jpg",
   },
   {
     id: "f2",
@@ -23,6 +25,7 @@ export const mockFriendBooks: FriendBook[] = [
     authorName: "하준",
     coverEmoji: "🎁",
     colorPalette: "#7BB4E0",
+    imageUrl: "/friends/f2.jpg",
   },
   {
     id: "f3",
@@ -30,6 +33,7 @@ export const mockFriendBooks: FriendBook[] = [
     authorName: "서연",
     coverEmoji: "👨‍🌾",
     colorPalette: "#D9C28A",
+    imageUrl: "/friends/f3.jpg",
   },
   {
     id: "f4",
@@ -37,6 +41,7 @@ export const mockFriendBooks: FriendBook[] = [
     authorName: "도윤",
     coverEmoji: "🥬",
     colorPalette: "#95C566",
+    imageUrl: "/friends/f4.jpg",
   },
   {
     id: "f5",

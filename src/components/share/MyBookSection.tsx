@@ -34,8 +34,8 @@ export default function MyBookSection({
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <SmallBookCover
           imageUrl={book.coverImageUrl}
-          width={118}
-          height={158}
+          width={150}
+          height={200}
         />
 
         <div

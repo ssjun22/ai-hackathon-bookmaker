@@ -87,7 +87,7 @@ export default function ShareClient({ book }: { book: MyBook }) {
       />
 
       <FriendsBooksGrid
-        friends={mockFriendBooks}
+        friends={mockFriendBooks.slice(0, 4)}
         myReactions={myReactions}
         onReact={handleReact}
       />
