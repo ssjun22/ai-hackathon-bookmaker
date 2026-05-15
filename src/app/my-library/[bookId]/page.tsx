@@ -9,15 +9,35 @@ interface BookViewerPageProps {
   params: Promise<{ bookId: string }>;
 }
 
-/** MyBookPage[] → StoryPage[] 어댑터 (ResultCarousel 재사용용) */
-function toStoryPages(pages: MyBookPage[]): StoryPage[] {
-  return pages.map((p) => ({
+/** MyBookPage[] → StoryPage[] 어댑터 (ResultCarousel 재사용용)
+ *  표지 이미지가 있으면 첫 슬라이드로 표지 카드를 prepend.
+ *  API는 coverImageUrl/storyTitle을 그대로 반환하므로 별도 수정 불필요.
+ */
+function toStoryPages(
+  pages: MyBookPage[],
+  storyTitle: string,
+  coverImageUrl?: string,
+): StoryPage[] {
+  const scenePages: StoryPage[] = pages.map((p) => ({
     pageNumber: p.pageNumber,
     title: p.title,
     body: p.body,
     imageUrl: p.imageUrl,
     bodyCandidates: [], // 뷰어는 읽기 전용 — 보기 후보 불필요
+    kind: "scene",
   }));
+
+  if (!coverImageUrl) return scenePages;
+
+  const coverPage: StoryPage = {
+    pageNumber: 0,
+    title: storyTitle,
+    body: "",
+    imageUrl: coverImageUrl,
+    bodyCandidates: [],
+    kind: "cover",
+  };
+  return [coverPage, ...scenePages];
 }
 
 export default function BookViewerPage({ params }: BookViewerPageProps) {
@@ -116,7 +136,7 @@ export default function BookViewerPage({ params }: BookViewerPageProps) {
     );
   }
 
-  const storyPages = toStoryPages(book.pages);
+  const storyPages = toStoryPages(book.pages, book.storyTitle, book.coverImageUrl);
 
   return (
     <main
@@ -129,17 +149,38 @@ export default function BookViewerPage({ params }: BookViewerPageProps) {
         storyTitle={book.storyTitle}
         pages={storyPages}
         coverImageUrl={book.coverImageUrl}
+        showSave={false}
       />
 
-      {/* 서재로 돌아가기 */}
+      {/* 액션 버튼 — 공유하기 / 서재로 돌아가기 */}
       <div
         style={{
           display: "flex",
           justifyContent: "center",
+          gap: 12,
           paddingBottom: 32,
           marginTop: -16,
+          flexWrap: "wrap",
         }}
       >
+        <button
+          type="button"
+          onClick={() => router.push(`/share/${bookId}`)}
+          style={{
+            padding: "12px 24px",
+            borderRadius: 24,
+            border: "none",
+            backgroundColor: "var(--color-brown)",
+            color: "#fffdf8",
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: "var(--font-display)",
+            cursor: "pointer",
+            boxShadow: "var(--shadow-clay-sm)",
+          }}
+        >
+          공유하기
+        </button>
         <button
           type="button"
           onClick={() => router.push("/my-library")}

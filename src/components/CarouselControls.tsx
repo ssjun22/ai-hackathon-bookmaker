@@ -5,6 +5,7 @@ interface CarouselControlsProps {
   isLastCard: boolean;
   isSaving: boolean;
   isRegenerating: boolean;
+  showSave?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onSave: () => void;
@@ -15,6 +16,7 @@ export default function CarouselControls({
   isLastCard,
   isSaving,
   isRegenerating,
+  showSave = true,
   onPrev,
   onNext,
   onSave,
@@ -69,8 +71,8 @@ export default function CarouselControls({
         </svg>
       </button>
 
-      {/* 다음/저장 버튼 */}
-      {isLastCard ? (
+      {/* 다음/저장 버튼 — showSave=false면 마지막 카드에서도 다음 버튼(disabled)을 노출 */}
+      {isLastCard && showSave ? (
         <button
           type="button"
           onClick={onSave}
@@ -135,6 +137,7 @@ export default function CarouselControls({
         <button
           type="button"
           onClick={onNext}
+          disabled={isLastCard}
           aria-label="다음 페이지"
           className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           style={{
@@ -149,7 +152,8 @@ export default function CarouselControls({
             border: "var(--border-clay)",
             backgroundColor: "var(--color-card)",
             color: "var(--color-brown)",
-            cursor: "pointer",
+            cursor: isLastCard ? "not-allowed" : "pointer",
+            opacity: isLastCard ? 0.35 : 1,
             boxShadow: "var(--shadow-clay-sm)",
             display: "flex",
             alignItems: "center",

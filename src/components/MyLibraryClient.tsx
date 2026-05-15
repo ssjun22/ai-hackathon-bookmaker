@@ -221,7 +221,16 @@ export default function MyLibraryClient({ newBookId }: MyLibraryClientProps) {
         )}
       </div>
 
-      <div style={{ textAlign: "center", paddingTop: 8 }}>
+      <div
+        style={{
+          textAlign: "center",
+          paddingTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
         <a
           href="/create"
           style={{
@@ -243,6 +252,26 @@ export default function MyLibraryClient({ newBookId }: MyLibraryClientProps) {
         >
           <span style={{ fontWeight: 700, marginRight: 2 }}>+</span>
           새 동화책 만들기
+        </a>
+
+        <a
+          href="/share/demo"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "10px 22px",
+            borderRadius: 24,
+            border: "2px solid var(--color-brown)",
+            color: "var(--color-brown)",
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "var(--font-display)",
+            textDecoration: "none",
+            backgroundColor: "transparent",
+          }}
+        >
+          공유 화면 보기 (데모)
         </a>
       </div>
     </div>

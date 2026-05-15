@@ -19,6 +19,7 @@ interface ResultCarouselProps {
   storyTitle: string;
   pages: StoryPage[];
   coverImageUrl?: string;
+  showSave?: boolean;
 }
 
 const SWIPE_THRESHOLD_PX = 60;
@@ -37,7 +38,7 @@ export function effectiveBody(s: EditState): string {
   return s.customInput.trim().length > 0 ? s.customInput : s.body;
 }
 
-export default function ResultCarousel({ storyTitle, pages, coverImageUrl }: ResultCarouselProps) {
+export default function ResultCarousel({ storyTitle, pages, coverImageUrl, showSave = true }: ResultCarouselProps) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -314,6 +315,7 @@ export default function ResultCarousel({ storyTitle, pages, coverImageUrl }: Res
           isLastCard={isLastCard}
           isSaving={isSaving}
           isRegenerating={isRegenerating}
+          showSave={showSave}
           onPrev={goPrev}
           onNext={goNext}
           onSave={handleSave}
