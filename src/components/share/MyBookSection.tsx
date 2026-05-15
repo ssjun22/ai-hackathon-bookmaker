@@ -33,8 +33,7 @@ export default function MyBookSection({
 
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <SmallBookCover
-          emoji={book.coverEmoji}
-          colorPalette={book.colorPalette}
+          imageUrl={book.coverImageUrl}
           width={118}
           height={158}
         />
