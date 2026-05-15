@@ -285,6 +285,32 @@ export default function BookReaderModal({
                     style={{ objectFit: "cover" }}
                     priority
                   />
+
+                  {/* 플로팅 CTA — 이미지 영역 우상단 */}
+                  <Link
+                    href={`/create?book=${book.id}`}
+                    onClick={onClose}
+                    className="absolute z-[5] top-4 right-4 md:top-6 md:right-6 md:!text-[19px] md:px-7 md:py-4"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      padding: "12px 22px",
+                      backgroundColor: "var(--color-brown)",
+                      color: "#FFFBF0",
+                      fontFamily: "var(--font-display)",
+                      fontSize: 16,
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      boxShadow:
+                        "0 14px 28px rgba(60,40,20,0.40), 0 6px 10px rgba(60,40,20,0.25)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    나만의 책 만들기
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 </div>
               )}
 
@@ -471,31 +497,6 @@ export default function BookReaderModal({
                 </div>
               </div>
 
-              {/* 플로팅 CTA — 모바일: 우하단, PC: 이미지 영역(좌측) 하단 */}
-              <Link
-                href={`/create?book=${book.id}`}
-                onClick={onClose}
-                className="absolute z-[5] bottom-6 right-6 md:right-auto md:bottom-10 md:left-1/4 md:-translate-x-1/2 md:!text-[22px] md:px-9 md:py-5"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  padding: "16px 28px",
-                  backgroundColor: "var(--color-brown)",
-                  color: "#FFFBF0",
-                  fontFamily: "var(--font-display)",
-                  fontSize: 19,
-                  fontWeight: 700,
-                  borderRadius: 999,
-                  boxShadow:
-                    "0 14px 28px rgba(60,40,20,0.40), 0 6px 10px rgba(60,40,20,0.25)",
-                  textDecoration: "none",
-                }}
-              >
-                나만의 책 만들기
-                <span aria-hidden="true">→</span>
-              </Link>
             </motion.div>
           </div>
         </>
