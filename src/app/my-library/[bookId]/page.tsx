@@ -129,15 +129,35 @@ export default function BookViewerPage({ params }: BookViewerPageProps) {
     >
       <ResultCarousel storyTitle={book.storyTitle} pages={storyPages} />
 
-      {/* 서재로 돌아가기 */}
+      {/* 액션 버튼 — 공유하기 / 서재로 돌아가기 */}
       <div
         style={{
           display: "flex",
           justifyContent: "center",
+          gap: 12,
           paddingBottom: 32,
           marginTop: -16,
+          flexWrap: "wrap",
         }}
       >
+        <button
+          type="button"
+          onClick={() => router.push(`/share/${bookId}`)}
+          style={{
+            padding: "12px 24px",
+            borderRadius: 24,
+            border: "none",
+            backgroundColor: "var(--color-brown)",
+            color: "#fffdf8",
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: "var(--font-display)",
+            cursor: "pointer",
+            boxShadow: "var(--shadow-clay-sm)",
+          }}
+        >
+          공유하기
+        </button>
         <button
           type="button"
           onClick={() => router.push("/my-library")}
