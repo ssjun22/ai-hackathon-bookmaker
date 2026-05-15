@@ -7,6 +7,7 @@ import {
   generateBookText,
   generateCoverImage,
   generateSceneImage,
+  getSceneFrames,
   resolveCharacterReferences,
 } from '@/lib/storyGeneration';
 import { uploadBookImage } from '@/lib/supabaseStorage';
@@ -41,13 +42,22 @@ export async function POST(request: Request) {
     const { storyTitle, scenes } = await generateBookText(bookId, answers);
 
     // 2. 캐릭터 reference 이미지 확보 (DB 사전 준비 우선, 없으면 LLM 생성 + 업로드)
-    const { buffers: refBuffers } = await resolveCharacterReferences(bookId, answers);
+    const { buffers: refBuffers, names: refNames, byName } =
+      await resolveCharacterReferences(bookId, answers);
+
+    // scene별로 필요한 캐릭터 ref만 골라내기 위한 frame 정보
+    const sceneFrames = getSceneFrames(bookId, answers);
 
     // 3. 표지 이미지 생성 + 업로드
     let coverImageUrl: string | undefined;
     try {
       const storySummary = scenes[0]?.body ?? storyTitle;
-      const coverBuffer = await generateCoverImage(storyTitle, storySummary, refBuffers);
+      const coverBuffer = await generateCoverImage(
+        storyTitle,
+        storySummary,
+        refBuffers,
+        refNames,
+      );
       coverImageUrl = await uploadBookImage(
         coverBuffer,
         `cover-${randomUUID()}.png`,
@@ -64,8 +74,15 @@ export async function POST(request: Request) {
     for (const scene of scenes) {
       let imageUrl: string | undefined;
 
+      // 이 scene에 명시된 캐릭터만 ref로 입력 (없으면 모든 ref 사용)
+      const frame = sceneFrames.find((f) => f.idx === scene.idx);
+      const matched = frame?.characters
+        ?.map((n) => byName[n])
+        .filter((b): b is Buffer => Boolean(b)) ?? [];
+      const sceneRefBuffers = matched.length > 0 ? matched : refBuffers;
+
       try {
-        const sceneBuffer = await generateSceneImage(scene, refBuffers);
+        const sceneBuffer = await generateSceneImage(scene, sceneRefBuffers);
         const fileName = `scene-${scene.idx}-${randomUUID()}.png`;
         imageUrl = await uploadBookImage(sceneBuffer, fileName, 'image/png');
         successCount++;

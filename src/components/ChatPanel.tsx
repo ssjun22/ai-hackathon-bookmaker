@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
@@ -37,10 +37,10 @@ const QUIZ_MAP: Record<string, QuizQuestion[]> = {
   ],
   rabbit: [
     { id: "rabbit-1", type: "choice", question: "착한 농부가 커다란 무를 사또에게 선물하자 사또가 보답으로 준 것은?", choices: ["쌀", "닭", "송아지"] },
-    { id: "rabbit-2", type: "choice", question: "욕심쟁이 농부가 송아지를 사또에게 선물하자 사또가 보답으로 준 것은?", choices: ["커다란 무", "금덩어리", "비단옷"] },
+    { id: "rabbit-2", type: "choice", question: "욕심쟁이 농부가 송아지를 사또에게 선물하자 사또가 보답으로 준 것은?", choices: ["커다란 무", "대파 한 단", "당근 한 개"] },
     { id: "rabbit-3", type: "free", question: "사또는 그것을 농부에게 주면서 어떤 생각을 했을까?", choices: [] },
     { id: "rabbit-4", type: "free", question: "욕심쟁이 농부는 사또에게 선물을 받고 어떤 표정을 지었을까?", choices: [] },
-    { id: "rabbit-5", type: "free", question: "네가 욕심쟁이 농부라면 사또에게 받은 무를 누구에게 나누어 주고 싶어?", choices: [] },
+    { id: "rabbit-5", type: "free", question: "네가 욕심쟁이 농부라면 사또에게 받은 무로 무엇을 하고 싶어?", choices: [] },
   ],
   brave: [
     { id: "brave-1", type: "choice", question: "두 사람이 다리 위에서 마주쳤을 때 어떤 기분이었을까요?", choices: ["난처했을 것 같아요", "화가 났을 것 같아요"] },
@@ -84,7 +84,6 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
   const [answers, setAnswers] = useState<ChatAnswer[]>([]);
 
   const {
-    isSupported: speechSupported,
     isListening,
     transcript,
     start: startSpeech,
@@ -98,12 +97,18 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
     resetSpeech();
   }, [transcript, resetSpeech]);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [freeText]);
+
   const current = quizzes[currentIndex];
   const isLast = currentIndex === quizzes.length - 1;
   const visibleChoices = current.type === "choice" ? current.choices.slice(0, 3) : [];
   const freeOptionIndex = visibleChoices.length;
-  const freeColor = OPTION_COLORS[freeOptionIndex] ?? OPTION_COLORS[OPTION_COLORS.length - 1];
-  const isFreeSelected = selectedChoice === freeOptionIndex;
 
   const canProceed =
     selectedChoice !== null &&
@@ -121,6 +126,31 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
     setSelectedChoice(freeOptionIndex);
     if (isListening) stopSpeech();
     else startSpeech();
+  }
+
+  function handlePrev() {
+    if (currentIndex === 0) return;
+    if (isListening) stopSpeech();
+    resetSpeech();
+
+    const prevIdx = currentIndex - 1;
+    const prevQuestion = quizzes[prevIdx];
+    const prevAnswer = answers[prevIdx];
+
+    setCurrentIndex(prevIdx);
+    setAnswers(answers.slice(0, prevIdx));
+
+    if (prevAnswer && prevQuestion.type === "choice") {
+      const choiceIdx = prevQuestion.choices.indexOf(prevAnswer.answer);
+      setSelectedChoice(choiceIdx >= 0 ? choiceIdx : null);
+      setFreeText("");
+    } else if (prevAnswer && prevQuestion.type === "free") {
+      setSelectedChoice(0);
+      setFreeText(prevAnswer.answer);
+    } else {
+      setSelectedChoice(null);
+      setFreeText("");
+    }
   }
 
   function handleNext() {
@@ -166,6 +196,7 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
       >
         {/* 뒤로가기 — 단순 아이콘 */}
         <button
+          type="button"
           onClick={() => router.back()}
           aria-label="뒤로가기"
           className="w-10 h-10 flex items-center justify-center"
@@ -223,32 +254,34 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           </div>
         </div>
 
-        {/* 힌트 버튼 — pill */}
+        {/* 홈 버튼 — Header와 통일 */}
         <button
           type="button"
-          aria-label="힌트 보기"
-          className="flex items-center gap-1.5 flex-shrink-0"
+          onClick={() => router.push("/")}
+          aria-label="홈으로"
+          className="flex items-center justify-center focus-visible:outline-none flex-shrink-0"
           style={{
-            padding: "8px 14px",
-            borderRadius: 999,
+            width: 44,
+            height: 44,
+            borderRadius: 14,
             backgroundColor: "var(--color-card)",
             color: "var(--color-brown)",
-            fontFamily: "var(--font-display)",
-            fontSize: 14,
-            fontWeight: 700,
-            boxShadow: "0 2px 5px rgba(60,40,20,0.12)",
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.6 1 1.5 1 2.3v1h6v-1c0-.8.4-1.7 1-2.3A7 7 0 0 0 12 2z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 11l9-8 9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
           </svg>
-          힌트
         </button>
       </header>
 
@@ -521,78 +554,6 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
                 </button>
               );
             })}
-
-            {/* 옵션 3: 마이크/자유입력 */}
-            <button
-              type="button"
-              onClick={() => handleSelectChoice(freeOptionIndex)}
-              aria-pressed={isFreeSelected}
-              className="flex items-center gap-3 text-left transition-all"
-              style={{
-                padding: "12px 12px",
-                borderRadius: 16,
-                backgroundColor: "var(--color-card)",
-                border: isFreeSelected
-                  ? `2px solid ${freeColor.border}`
-                  : "1.5px solid rgba(120,90,50,0.20)",
-                boxShadow: isFreeSelected
-                  ? `0 2px 8px rgba(60,40,20,0.12), inset 0 0 0 1px ${freeColor.border}`
-                  : "none",
-              }}
-            >
-              <span
-                className="flex items-center justify-center flex-shrink-0 font-display"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  backgroundColor: freeColor.bg,
-                  color: freeColor.number,
-                  fontSize: 16,
-                  fontWeight: 700,
-                }}
-              >
-                {freeOptionIndex + 1}
-              </span>
-              <span
-                className="flex-1"
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: "var(--color-brown-soft)",
-                  fontFamily: "var(--font-display)",
-                }}
-              >
-                마이크 누르고 내 생각 말하기
-              </span>
-              {speechSupported && (
-                <span
-                  role="button"
-                  aria-label={isListening ? "음성 입력 중지" : "음성 입력 시작"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMicTap();
-                  }}
-                  className="flex items-center justify-center flex-shrink-0"
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    backgroundColor: isListening
-                      ? "var(--color-green-deep)"
-                      : "var(--color-green)",
-                    color: "#FFFBF0",
-                    boxShadow: "0 3px 6px rgba(60,40,20,0.18)",
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
-                    <path d="M5 11a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M12 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </span>
-              )}
-            </button>
           </>
         ) : (
           /* ── 자유 응답 — 큰 마이크 UI ── */
@@ -706,25 +667,36 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
               버튼을 다시 누르면 종료돼요
             </div>
 
-            {/* 입력 텍스트 미리보기 (있을 때만) */}
-            {freeText && (
-              <div
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  backgroundColor: "var(--color-beige-soft)",
-                  borderLeft: "4px solid var(--color-green-deep)",
-                  fontSize: 14,
-                  color: "var(--color-brown)",
-                  fontFamily: "var(--font-body)",
-                  textAlign: "left",
-                  marginTop: -4,
-                }}
-              >
-                {freeText}
-              </div>
-            )}
+            {/* 입력창 — 마이크 결과 자동 채움 + 직접 수정 가능, 한 줄에서 시작해 자동 확장 */}
+            <textarea
+              ref={textareaRef}
+              value={freeText}
+              onChange={(e) => {
+                setFreeText(e.target.value);
+                if (selectedChoice !== freeOptionIndex) {
+                  setSelectedChoice(freeOptionIndex);
+                }
+              }}
+              placeholder="여기에 직접 적거나, 마이크로 말해보세요"
+              rows={1}
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: 12,
+                backgroundColor: "var(--color-beige-soft)",
+                border: "1.5px solid rgba(120,90,50,0.20)",
+                borderLeft: "4px solid var(--color-green-deep)",
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: "var(--color-brown)",
+                fontFamily: "var(--font-body)",
+                textAlign: "left",
+                resize: "none",
+                outline: "none",
+                overflow: "hidden",
+                marginTop: -4,
+              }}
+            />
           </div>
         )}
       </div>
@@ -736,8 +708,32 @@ export default function ChatPanel({ book, onComplete }: ChatPanelProps) {
           padding: "12px 20px",
           paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
           backgroundColor: "var(--color-card)",
+          gap: 10,
         }}
       >
+        {/* 이전 버튼 — 첫 질문이 아닐 때만 표시 */}
+        {currentIndex > 0 && (
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="이전 질문"
+            className="flex items-center justify-center gap-1 font-display transition-all flex-shrink-0"
+            style={{
+              padding: "18px 22px",
+              borderRadius: 999,
+              backgroundColor: "var(--color-beige-soft)",
+              color: "var(--color-brown)",
+              border: "1.5px solid rgba(120,90,50,0.20)",
+              fontSize: 18,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: 22 }}>‹</span>
+            이전
+          </button>
+        )}
+
         {/* 다음 버튼 — 큼직하게 */}
         <button
           type="button"

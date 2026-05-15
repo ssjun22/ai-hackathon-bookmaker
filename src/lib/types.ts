@@ -16,8 +16,10 @@ export type MyBookPage = {
 };
 
 // AI 사전 생성 페이지 — 보기 후보 포함 (구 StoryPage)
+// kind === "cover"는 캐러셀 첫 슬라이드용 표지 카드 (DB에는 저장하지 않음)
 export type StoryPage = MyBookPage & {
   bodyCandidates: string[];
+  kind?: "cover" | "scene";
 };
 
 // 사용자가 만든 책 (구 SavedBook)
